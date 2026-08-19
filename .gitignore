@@ -9,6 +9,7 @@ data/raw/
 data/cache/
 data/TSB-AD-U/
 data/prepared/tsb_ad_ucr_medical_guided.npz
+data/prepared/tsb_ad_cats_heldout_replay.npz
 data/experiment/*.npz
 # Internal derived SMD/Exathlon windows; rebuild locally under upstream terms.
 data/experiment/protocol_v2_confirmation.npz

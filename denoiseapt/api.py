@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import threading
 import time
 import uuid
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, is_dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -25,10 +26,21 @@ from .metrics import (
 
 SESSION_TTL_SECONDS = 2 * 60 * 60
 MAX_SESSIONS = 32
+HELDOUT_REPLAY_THRESHOLDS_SHA256 = (
+    "91971048e7b07a8012e525b3cc8db14ab6bfffc9cd472a19648eeb5361433ef3"
+)
 
 
 class ApiError(ValueError):
     """A request error that can be safely returned to the browser."""
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _jsonable(value: Any) -> Any:
@@ -188,6 +200,19 @@ class DemoService:
         guided_record = (
             self.root / "data" / "prepared" / "tsb_ad_ucr_medical_guided.npz"
         )
+        replay_record = (
+            self.root / "data" / "prepared" / "tsb_ad_cats_heldout_replay.npz"
+        )
+        try:
+            from denoiseapt.benchmark_replay import load_benchmark_replay
+
+            load_benchmark_replay(replay_record)
+            threshold_path = self.root / "config" / "heldout_replay_thresholds.json"
+            heldout_replay_ready = (
+                _sha256(threshold_path) == HELDOUT_REPLAY_THRESHOLDS_SHA256
+            )
+        except (OSError, ValueError, json.JSONDecodeError):
+            heldout_replay_ready = False
         return {
             "status": "ok",
             "service": "DenoiseAPT",
@@ -200,6 +225,7 @@ class DemoService:
             "automatic_runtime_error": runtime_status["automatic_runtime_error"],
             "automatic_runtime_manifest": str(self.checkpoint_path.relative_to(self.root)),
             "guided_case_ready": guided_record.is_file(),
+            "heldout_replay_ready": heldout_replay_ready,
             "guided_certificate_ready": runtime_status["guided_certificate_ready"],
             "guided_certificate_reason": runtime_status["guided_certificate_reason"],
             "uptime_seconds": round(time.time() - self.started_at, 3),
@@ -216,6 +242,15 @@ class DemoService:
         for path in sorted(prepared.glob("*.npz")):
             try:
                 signal, labels, metadata = _load_prepared_case(path)
+                if bool(metadata.get("benchmark_replay")):
+                    from denoiseapt.benchmark_replay import load_benchmark_replay
+
+                    replay = load_benchmark_replay(path)
+                    signal, labels, metadata = (
+                        replay.reference,
+                        replay.labels,
+                        replay.metadata,
+                    )
             except (OSError, ValueError, KeyError, json.JSONDecodeError) as exc:
                 # One damaged optional case must not disable the packaged
                 # synthetic review-only workflow.
@@ -244,6 +279,12 @@ class DemoService:
                         path.stem == "tsb_ad_ucr_medical_guided"
                         and guided_certificate_ready
                     ),
+                    "benchmark_replay": bool(metadata.get("benchmark_replay", False)),
+                    "held_out": bool(metadata.get("held_out", False)),
+                    "default_family": metadata.get("default_family"),
+                    "default_severity": metadata.get("default_severity"),
+                    "default_replicate": metadata.get("default_replicate"),
+                    "fixed_window": bool(metadata.get("benchmark_replay", False)),
                 }
             )
         return {"cases": cases, "warnings": warnings}
@@ -300,6 +341,13 @@ class DemoService:
             case_id = str(payload.get("case_id") or "synthetic_guided_case")
             reference, labels, metadata = self._read_case(case_id)
             timestamps = None
+
+        # The held-out dashboard case is a replay of outputs already committed
+        # by the matched benchmark.  External comparators are deliberately not
+        # described as browser-time inference, particularly RINS-T whose source
+        # cannot be redistributed under the pinned upstream checkout.
+        if not is_upload and bool(metadata.get("benchmark_replay")):
+            return self._analyze_benchmark_replay(payload, case_id)
 
         window = payload.get("window")
         if window is None:
@@ -559,12 +607,318 @@ class DemoService:
             response["series"]["reference"] = metric_reference
         return _jsonable(response)
 
+    def _benchmark_replay_path(self, case_id: str) -> Path:
+        safe_id = Path(case_id).name
+        if safe_id != case_id or not safe_id:
+            raise ApiError("Invalid replay identifier.")
+        path = self.root / "data" / "prepared" / f"{safe_id}.npz"
+        if not path.is_file():
+            raise ApiError(f"Unknown benchmark replay: {case_id}")
+        return path
+
+    def _benchmark_witnesses(self, domain: str, normalization):
+        """Use the frozen domain thresholds that produced the table diagnostics."""
+
+        from denoiseapt.evidence_controller import EvidencePreservationController
+
+        runtime = self._load_runtime()
+        threshold_path = self.root / "config" / "heldout_replay_thresholds.json"
+        try:
+            if _sha256(threshold_path) != HELDOUT_REPLAY_THRESHOLDS_SHA256:
+                raise ValueError("threshold artifact hash mismatch")
+            payload = json.loads(threshold_path.read_text("utf-8"))
+            if (
+                payload.get("schema_version") != 1
+                or payload.get("domain") != domain
+                or payload.get("confirmation_values_used") is not False
+            ):
+                raise ValueError("threshold artifact scope mismatch")
+            records = payload["witnesses"]
+        except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise ApiError("Held-out replay threshold provenance is unavailable.") from exc
+        witnesses = []
+        for witness in runtime._witnesses(normalization):  # frozen runtime adapter
+            try:
+                record = records[witness.witness_id]
+                valid_record = (
+                    witness.model_sha256 == str(record["model_sha256"])
+                    and int(witness.context_left) == int(record["warmup"])
+                    and str(record["role"]) == "configured"
+                    and math.isfinite(float(record["threshold"]))
+                    and float(record["threshold"]) > 0
+                )
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ApiError(
+                    f"Threshold provenance is invalid for {witness.witness_id}."
+                ) from exc
+            if not valid_record:
+                raise ApiError(f"Frozen model hash mismatch for {witness.witness_id}.")
+            witnesses.append(
+                replace(
+                    witness,
+                    threshold=float(record["threshold"]),
+                    threshold_source=str(record["threshold_source_sha256"]),
+                    threshold_source_sha256=str(record["threshold_source_sha256"]),
+                )
+            )
+        controller = EvidencePreservationController(
+            tuple(witnesses), runtime.controller_config
+        )
+        return tuple(witnesses), controller, str(threshold_path.relative_to(self.root))
+
+    @staticmethod
+    def _benchmark_evidence_payload(
+        observation: np.ndarray,
+        current: np.ndarray,
+        observed_scores: np.ndarray,
+        current_scores: np.ndarray,
+        *,
+        threshold: float,
+        scale: float,
+    ) -> tuple[dict[str, Any], dict[str, np.ndarray]]:
+        """Build display-only evidence for the currently shown model output."""
+
+        shared_crossing = (
+            (observed_scores >= threshold) & (current_scores >= threshold)
+        ).astype(np.float32)
+        # A crossing can be one point wide. Expand it by four points on each
+        # side only for display; the frozen scores and verification are not
+        # altered.
+        shared = (
+            np.convolve(shared_crossing, np.ones(9, dtype=np.float32), mode="same")
+            > 0
+        ).astype(np.float32)
+        score_difference = np.clip(
+            np.abs(observed_scores - current_scores) / max(threshold, 1e-12),
+            0.0,
+            1.0,
+        ).astype(np.float32)
+        signal_difference = np.clip(
+            np.abs(observation - current) / max(3.0 * scale, 1e-12), 0.0, 1.0
+        ).astype(np.float32)
+        return (
+            {
+                "values": shared,
+                "summary": {
+                    "definition": (
+                        "shared Scorer-A threshold support, expanded four points "
+                        "for display"
+                    ),
+                    "scope": "configured evidence cue; not an anomaly probability",
+                },
+            },
+            {
+                "shared_evidence": shared,
+                "score_change": score_difference,
+                "morphology": signal_difference,
+                "disagreement": np.zeros(observation.size, dtype=np.float32),
+            },
+        )
+
+    def _analyze_benchmark_replay(
+        self, payload: dict[str, Any], case_id: str
+    ) -> dict[str, Any]:
+        from denoiseapt.benchmark_replay import (
+            BenchmarkReplaySession,
+            load_benchmark_replay,
+            os_nrmse,
+        )
+        from denoiseapt.inference import WindowNormalization
+
+        replay = load_benchmark_replay(self._benchmark_replay_path(case_id))
+        window = payload.get("window") or {}
+        if not isinstance(window, dict):
+            raise ApiError("window must be a JSON object.")
+        start = int(window.get("start", 0))
+        length = int(window.get("length", replay.length))
+        if start != 0 or length != replay.length:
+            raise ApiError("The matched benchmark replay uses the fixed interval [0, 512).")
+        request = payload.get("corruption") or {}
+        if not isinstance(request, dict):
+            raise ApiError("corruption must be a JSON object.")
+        family = str(request.get("family", replay.metadata["default_family"]))
+        severity = float(request.get("severity", replay.metadata["default_severity"]))
+        replicate = int(request.get("replicate", request.get("seed", replay.metadata["default_replicate"])))
+        try:
+            index = replay.condition_index(family, severity, replicate)
+        except ValueError as exc:
+            raise ApiError(str(exc)) from exc
+
+        reference = replay.reference
+        labels = replay.labels
+        observation = replay.series["observation"][index]
+        model_output = replay.series["our_model"][index]
+        normalization = WindowNormalization(
+            center=float(replay.center[index]), scale=float(replay.scale[index])
+        )
+        witnesses, controller, threshold_source = self._benchmark_witnesses(
+            "sensor", normalization
+        )
+        observed_scores = np.asarray(witnesses[0].scorer(observation), dtype=np.float32)
+        model_scores = np.asarray(witnesses[0].scorer(model_output), dtype=np.float32)
+        verification = controller.verify(observation, model_output)
+
+        scale = float(replay.scale[index])
+        methods = {
+            "median": replay.series["median_filter_w3"][index],
+            "wavelet": replay.series["wavelet_shrinkage"][index],
+            "noisereduce": replay.series["noisereduce"][index],
+            "rins_t": replay.series["rins_t"][index],
+            "our_model": model_output,
+        }
+        metrics = {
+            key: {
+                "overall_os_nrmse": os_nrmse(reference, values, scale),
+                "anomaly_os_nrmse": os_nrmse(reference, values, scale, labels),
+            }
+            for key, values in methods.items()
+        }
+        metrics["observed"] = {
+            "overall_os_nrmse": os_nrmse(reference, observation, scale),
+            "anomaly_os_nrmse": os_nrmse(reference, observation, scale, labels),
+        }
+
+        threshold = float(witnesses[0].threshold)
+        concern, cues = self._benchmark_evidence_payload(
+            observation,
+            model_output,
+            observed_scores,
+            model_scores,
+            threshold=threshold,
+            scale=scale,
+        )
+
+        session_id = uuid.uuid4().hex
+        session = BenchmarkReplaySession(observation, model_output)
+        session_data = {
+            "created": time.time(),
+            "benchmark_replay": True,
+            "replay": replay,
+            "condition_index": index,
+            "model_session": session,
+            "reference": reference,
+            "labels": labels,
+            "observed": observation,
+            "observed_scores": observed_scores,
+            "normalization": normalization,
+            "witnesses": witnesses,
+            "controller": controller,
+            "threshold_source": threshold_source,
+        }
+        with self._sessions_lock:
+            self._prune_sessions(session_data["created"])
+            self._sessions[session_id] = session_data
+
+        control = self._benchmark_control_payload(
+            session_data, verification, current_is_automatic=True
+        )
+        response = {
+            "session_id": session_id,
+            "history_depth": 0,
+            "revision": 0,
+            "meta": {
+                "case_id": case_id,
+                "case_name": replay.metadata["name"],
+                "domain": replay.metadata["domain"],
+                "source": replay.metadata["source"],
+                "window_start": 0,
+                "window_end": replay.length,
+                "source_window": [
+                    replay.metadata["window_start"],
+                    replay.metadata["window_end"],
+                ],
+                "condition_id": str(replay.condition_id[index]),
+                "corruption": {
+                    "family": str(replay.family[index]),
+                    "severity": float(replay.severity[index]),
+                    "replicate": int(replay.replicate[index]),
+                    "demonstration_only": True,
+                },
+                "benchmark_replay": True,
+                "benchmark_case": True,
+                "held_out": True,
+                "synthetic": bool(replay.metadata.get("synthetic", False)),
+                "simulation_scope": replay.metadata.get("simulation_scope"),
+                "posthoc_visual_selection": True,
+                "reference_available": True,
+                "reference_scope": replay.metadata["reference_scope"],
+                "method_scope": replay.metadata["method_scope"],
+                "target_event": [
+                    replay.metadata["target_event_start"],
+                    replay.metadata["target_event_end"],
+                ],
+                "suggested_expert_interval": [
+                    replay.metadata["expert_interval_start"],
+                    replay.metadata["expert_interval_end"],
+                ],
+            },
+            "time": list(range(replay.length)),
+            "series": {
+                "reference": reference,
+                "observed": observation,
+                **methods,
+            },
+            "scores": {"observed": observed_scores, "our_model": model_scores},
+            "automatic_control": control,
+            "concern": concern,
+            "cues": cues,
+            "anomaly_intervals": _intervals(labels),
+            "metrics": metrics,
+            "limitations": [
+                "This is an illustrative held-out benchmark replay selected after panel inspection.",
+                "External comparator traces are frozen matched outputs, not browser-time executions.",
+                "The reference and labels are available only for controlled evaluation and display.",
+                "Configured scorer evidence does not establish physical anomaly truth.",
+            ],
+        }
+        return _jsonable(response)
+
+    def _benchmark_control_payload(
+        self,
+        data: dict[str, Any],
+        verification,
+        *,
+        current_is_automatic: bool,
+        action: str | None = None,
+    ) -> dict[str, Any]:
+        replay = data["replay"]
+        session = data["model_session"]
+        return {
+            "mode": "heldout_benchmark_replay",
+            "certification_eligible": True,
+            "decision": "automatic_model" if current_is_automatic else "expert_adaptation",
+            "auto_committed": bool(current_is_automatic),
+            "current_is_automatic": bool(current_is_automatic),
+            "certificate": verification.to_dict(include_scores=False),
+            "repair_intervals": [],
+            "eligibility_reason": (
+                "Frozen Sensor-domain A/B thresholds are available for this held-out replay."
+            ),
+            "runtime_provenance": {
+                "threshold_scope": {
+                    "calibration_domain": "Sensor calibration groups",
+                    "window_length": 512,
+                    "configured_witnesses": ["A_causal_mlp", "B_causal_conv"],
+                    "threshold_source": data["threshold_source"],
+                },
+                "condition_id": str(replay.condition_id[data["condition_index"]]),
+                "artifact": str(replay.path.relative_to(self.root)),
+            },
+            "human_intervention": {
+                "action": action,
+                "revision": session.revision,
+                "actions": list(session.actions),
+            },
+        }
+
     def intervene(self, payload: dict[str, Any]) -> dict[str, Any]:
         session_id = str(payload.get("session_id") or "")
         with self._sessions_lock:
             data = self._sessions.get(session_id)
         if data is None:
             raise ApiError("Unknown or expired analysis session.")
+        if data.get("benchmark_replay"):
+            return self._intervene_benchmark_replay(payload, data)
         action = str(payload.get("action") or "").lower()
         if action not in {"accept", "protect", "blend", "restore_automatic", "revert"}:
             raise ApiError(
@@ -655,6 +1009,69 @@ class DemoService:
                 "revision": int(session_dict.get("revision", 0)),
                 "action": action,
                 "automatic_control": control_update,
+            }
+        )
+
+    def _intervene_benchmark_replay(
+        self, payload: dict[str, Any], data: dict[str, Any]
+    ) -> dict[str, Any]:
+        from denoiseapt.benchmark_replay import os_nrmse
+
+        action = str(payload.get("action") or "").lower()
+        if action not in {"blend", "restore_automatic", "revert"}:
+            raise ApiError("The held-out replay supports Blend, Restore automatic, and Revert.")
+        session = data["model_session"]
+        try:
+            session.apply(
+                action,
+                start=int(payload.get("start", 0)),
+                end=int(payload.get("end", session.current.size)),
+                beta=float(payload.get("beta", 0.5)),
+                expected_revision=payload.get("expected_revision"),
+            )
+        except (ValueError, RuntimeError) as exc:
+            raise ApiError(str(exc)) from exc
+        current = session.current
+        witnesses = data["witnesses"]
+        scores = np.asarray(witnesses[0].scorer(current), dtype=np.float32)
+        verification = data["controller"].verify(data["observed"], current)
+        current_is_automatic = bool(np.array_equal(current, session.baseline))
+        replay = data["replay"]
+        index = data["condition_index"]
+        metric = {
+            "overall_os_nrmse": os_nrmse(
+                data["reference"], current, float(replay.scale[index])
+            ),
+            "anomaly_os_nrmse": os_nrmse(
+                data["reference"], current, float(replay.scale[index]), data["labels"]
+            ),
+        }
+        control = self._benchmark_control_payload(
+            data,
+            verification,
+            current_is_automatic=current_is_automatic,
+            action=action,
+        )
+        concern, cues = self._benchmark_evidence_payload(
+            data["observed"],
+            current,
+            data["observed_scores"],
+            scores,
+            threshold=float(witnesses[0].threshold),
+            scale=float(replay.scale[index]),
+        )
+        return _jsonable(
+            {
+                "session_id": str(payload.get("session_id")),
+                "series": {"our_model": current},
+                "scores": {"our_model": scores},
+                "metrics": {"our_model": metric},
+                "concern": concern,
+                "cues": cues,
+                "history_depth": session.history_depth,
+                "revision": session.revision,
+                "action": action,
+                "automatic_control": control,
             }
         )
 

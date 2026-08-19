@@ -1,59 +1,62 @@
 # Demo data
 
-The package supports two deliberately separate data modes.
+The revised application separates an optional benchmark replay from local CSV
+inspection. A deterministic synthetic fixture is retained only for automated
+tests and is not a user-facing data source.
 
-## Guided TSB-AD-U case
+## Optional TSB-AD-U CATSv2 replay
 
-The default downloader selects:
+The local benchmark demonstration uses a 512-point held-out window from CATSv2,
+a simulated complex dynamical-system telemetry dataset included in TSB-AD-U. The
+replay contains a derived source window, its evaluation-only reference and
+labels, and frozen matched denoiser outputs for one controlled corruption
+condition. It was selected after panel inspection for visual explanation and
+must not be treated as additional aggregate benchmark evidence.
 
-`TSB-AD-U/442_UCR_id_140_Medical_tr_1875_1st_4187.csv`
+The replay and its source records are intentionally absent from this public Git
+repository pending review of upstream redistribution terms. An authorized local
+copy is accepted only with its integrity manifest and pinned provenance hashes;
+a missing or mismatched manifest must fail closed. The public checkout therefore
+shows no benchmark preset and directs the user to CSV review-only mode.
 
-This official TSB-AD-U series has 7,501 samples and a labelled interval at
-source indices `[4187, 4199)`. The preparation script extracts a 512-sample
-window centred on that event and records the exact source indices in the
-output metadata.
+## CSV review-only mode
 
-Neither the archive nor this prepared guided NPZ is bundled in the release ZIP.
-The commands below create it locally. Until then, the packaged synthetic case
-remains runnable in explicit review-only mode.
+The browser accepts a headered, comma-delimited file with one finite numeric
+signal column. Conventional time columns and numeric `label`, `anomaly`, or
+`target` columns are optional. The service supports a univariate series of
+64--250,000 points and analyzes one contiguous interval of 64--2,048 points.
 
-Run from the package root:
+CSV values are treated as the observation. The upload path performs no
+resampling, missing-value imputation, multivariate modeling, or cross-domain
+calibration. Without a known pre-corruption reference, reconstruction measures
+are unavailable. Labels, when present, are used only for display. An upload is
+always review-only and never receives held-out replay or benchmark-certificate
+status.
 
-```bash
-python scripts/download_data.py
-python scripts/prepare_demo_case.py --ensure-demo-case
-```
+## Hidden test fixture
 
-The archive is cached in `data/raw/TSB-AD-U.zip` and validated against the
-pinned SHA-256 in `dataset_metadata.json`. The extracted dataset and derived
-guided NPZ are not committed or redistributed by this package.
+`data/prepared/synthetic_guided_case.npz` is deterministic data created by the
+DenoiseAPT authors for API, installation, and UI regression tests. The revised
+browser filters it out of the benchmark selector. It is not a TSB-AD record,
+does not support benchmark claims, and must not be presented as the guided
+demonstration.
 
-The release validation completed with normal TLS verification and the pinned
-checksum. The downloader fails closed if either check fails. An explicitly
-insecure TLS mode exists only for controlled recovery and requires a non-empty
-trusted SHA-256; it emits a warning and records the acquisition mode. Do not use
-it simply to bypass a download error.
-
-## Offline fixture
-
-For fixture generation without downloading TSB-AD:
+The fixture can be regenerated without downloading TSB-AD:
 
 ```bash
 python scripts/download_data.py --fixture-only --destination data/fixture
 ```
 
-The built-in fixture is deterministic synthetic data created by DenoiseAPT.
-It is suitable for tests and UI development, but it is **not** a TSB-AD case
-and must not be reported as benchmark evidence.
-
 ## Provenance and licensing
 
 - Official archive: <https://www.thedatum.org/datasets/TSB-AD-U.zip>
 - TSB-AD project: <https://github.com/TheDatumOrg/TSB-AD>
-- Dataset-specific sources/licenses: <https://thedatumorg.github.io/TSB-AD/#summary-of-datasets>
+- Dataset-specific sources and licenses:
+  <https://thedatumorg.github.io/TSB-AD/#summary-of-datasets>
 
-TSB-AD states that its preprocessing and curation are released under
-Apache-2.0. The datasets inside the collection retain their upstream terms.
-The official page lists no license for UCR; absence of a stated license is not
-permission to redistribute it. Users must consult and cite the original source
-before publication or redistribution.
+The TSB-AD project states that its preprocessing and curation code is released
+under Apache-2.0, while constituent datasets retain their original terms. Its
+dataset summary identifies CATSv2 as simulated telemetry and lists CC BY 4.0.
+The same summary lists no license for UCR; absence of a stated license is not
+permission to redistribute it. Consult and cite the original source before
+publishing or redistributing any dataset-derived artifact.

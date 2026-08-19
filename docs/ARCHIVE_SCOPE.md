@@ -1,29 +1,39 @@
-# Release scope and local archive
+# Public repository scope
 
-This Git repository is a curated public software snapshot, not a copy of the full
-research workspace. The original workspace is retained locally as the archive
-of development history, sealed evidence, literature, screenshots, and earlier
-research drafts.
+This Git repository is a curated public software snapshot rather than a copy of
+the full research workspace. Development history and sealed evaluation evidence
+are retained separately by the authors.
 
 ## Included
 
-- Runnable DenoiseAPT application code and browser assets.
+- MIT-licensed DenoiseAPT application code and browser assets.
 - Frozen live-runtime checkpoints and configuration.
-- Synthetic demonstration data.
+- A deterministic synthetic fixture used only by API and installation tests.
 - Aggregate external-benchmark provenance and summary.
-- Self-contained tests and setup scripts.
+- Self-contained tests, setup scripts, and software documentation.
+
+The revised browser hides the synthetic fixture from the benchmark selector. It
+remains in the repository only so the public package can be checked without
+redistributing an upstream dataset.
 
 ## Excluded from Git
 
 - `.venv`, caches, logs, sessions, temporary files, and build products.
-- `runs/` and other sealed or internal evidence directories.
-- Raw TSB-AD-U data, extracted upstream records, and derived experiment NPZs.
-- Per-window benchmark outputs, waveform rows, witness rows, and audit traces.
+- Internal run directories and sealed condition-level evidence.
+- Raw TSB-AD-U data, extracted upstream records, and derived evaluation windows.
+- The integrity-pinned CATSv2 simulated-telemetry replay used by the local
+  benchmark demonstration, pending review of upstream redistribution terms.
+- Per-window outputs, waveform rows, witness rows, and audit traces.
 - The unlicensed RINS-T source checkout and unused third-party baselines.
-- Historical drafts, reference examples, literature libraries, writing guides,
-  prompt/workflow state, and superseded figures.
-- Old release archives and typesetting auxiliary files.
+- Literature libraries, internal workflow state, superseded figures, and old
+  release archives.
 
-These exclusions prevent accidental redistribution of upstream data, private
-research traces, unlicensed third-party source, and obsolete material. They do
-not imply that the excluded history was deleted from the author's local archive.
+The public checkout consequently has no benchmark preset. The browser directs
+users to compatible CSV inspection in review-only mode; it does not substitute
+the hidden synthetic test fixture. These exclusions prevent accidental
+redistribution of upstream data, private research traces, unlicensed
+third-party source, and obsolete material. They do not imply that the retained
+research archive was deleted.
+
+The MIT License applies to the included DenoiseAPT code. Dataset and third-party
+terms remain with their respective upstream sources.

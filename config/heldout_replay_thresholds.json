@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "source_artifact": "runs/hybrid_v2_confirmation_fresh_v1/artifacts/calibration_thresholds.json",
+  "source_artifact_sha256": "36c9586566752881632f3a5eaf3c0fe861927f044877af59d8b67f3cfdf6cc10",
+  "domain": "sensor",
+  "confirmation_values_used": false,
+  "witnesses": {
+    "A_causal_mlp": {
+      "model_sha256": "9e87683ae13c6692f6aa7350a51a01d51ebed0a5b4d24d2af9e38904d67bf9d2",
+      "threshold": 7.999268531799316,
+      "threshold_source_sha256": "3757f468756d80ecf94d955ae85a7f589f6c20bc5b82c1820fb1c1c493a7263e",
+      "warmup": 16,
+      "role": "configured"
+    },
+    "B_causal_conv": {
+      "model_sha256": "a3eaeb87c7135ff655509b9c569ee867ec68acf2500089cc99d7ac9bc27ca4da",
+      "threshold": 7.120535850524902,
+      "threshold_source_sha256": "e5669aa80cc9265313ecd2bbd5c270a551274d91d77d291fffd0666a49d47b0a",
+      "warmup": 31,
+      "role": "configured"
+    }
+  }
+}

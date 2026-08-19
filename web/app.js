@@ -10,22 +10,21 @@
 
   const DEFAULT_MAX_REQUEST_BYTES = 16 * 1024 * 1024;
   const SIGNAL_ORDER = [
-    "reference", "observed", "classical", "cgan",
-    "denoiseapt", "hybrid", "automatic", "approved"
+    "reference", "observed", "median", "wavelet",
+    "noisereduce", "rins_t", "our_model"
   ];
-  const SCORE_ORDER = [
-    "observed", "cgan", "denoiseapt", "hybrid", "automatic", "approved"
-  ];
+  const SCORE_ORDER = ["observed", "our_model"];
 
   const COLORS = {
     reference: "#586c75",
     observed: "#c84f53",
-    classical: "#df912e",
-    cgan: "#7456a6",
-    denoiseapt: "#117b79",
-    hybrid: "#8b5d13",
-    automatic: "#1769a6",
-    approved: "#3478b8",
+    median: "#df912e",
+    wavelet: "#7456a6",
+    noisereduce: "#8b5d13",
+    rins_t: "#64767d",
+    our_model: "#117b79",
+    automaticBaseline: "#64767d",
+    adaptedPreview: "#3478b8",
     grid: "#e4ebec",
     axis: "#788a91",
     selection: "rgba(52, 120, 184, 0.15)",
@@ -34,27 +33,30 @@
   };
 
   const METHOD_LABELS = {
-    reference: "Clean reference",
+    reference: "Reference before corruption (evaluation only)",
     observed: "Corrupted observation",
-    classical: "Moving-average filter (w=9)",
-    cgan: "Matched conditional GAN",
-    denoiseapt: "Generative repair candidate",
-    hybrid: "Evaluated DenoiseAPT hybrid",
-    automatic: "Established DenoiseAPT output",
-    approved: "Current session signal"
+    median: "Median filter (w=3)",
+    wavelet: "Wavelet thresholding",
+    noisereduce: "Noisereduce",
+    rins_t: "RINS-T adaptation",
+    our_model: "Our Model"
   };
 
   const METHOD_CONTEXT = {
     reference: "evaluation only",
-    hybrid: "separately evaluated configuration",
-    automatic: "established live default",
-    approved: "reversible session edit"
+    observed: "same controlled condition",
+    median: "frozen matched output",
+    wavelet: "frozen matched output",
+    noisereduce: "frozen matched output",
+    rins_t: "official-architecture adaptation",
+    our_model: "automatic or expert-adapted output"
   };
 
   const state = {
     cases: [],
     upload: null,
     result: null,
+    automaticModel: null,
     selection: null,
     view: null,
     drag: null,
@@ -71,13 +73,14 @@
     form: $("#analysisForm"), runButton: $("#runButton"), formError: $("#formError"),
     caseSelect: $("#caseSelect"), caseMeta: $("#caseMeta"), catalogFields: $("#catalogFields"),
     uploadFields: $("#uploadFields"), csvFile: $("#csvFile"), fileMeta: $("#fileMeta"),
-    start: $("#windowStart"), length: $("#windowLength"), family: $("#corruptionFamily"),
+    start: $("#windowStart"), end: $("#windowEnd"), family: $("#corruptionFamily"),
     severity: $("#severity"), severityValue: $("#severityValue"), seed: $("#seed"),
-    randomizeSeed: $("#randomizeSeed"), empty: $("#emptyState"), results: $("#results"),
+    empty: $("#emptyState"), results: $("#results"),
     caseHeading: $("#caseHeading"), signalPlots: $("#signalPlots"), signalLegend: $("#signalLegend"),
     scoreLegend: $("#scoreLegend"), plotReadout: $("#plotReadout"), plotTemplate: $("#plotTemplate"),
     scoreCanvas: $("#scoreCanvas"), scoreTooltip: $("#scoreTooltip"),
-    concernCanvas: $("#concernCanvas"), concernTooltip: $("#concernTooltip"),
+    concernTitle: $("#concernTitle"), concernDescription: $("#concernDescription"),
+    concernKey: $("#concernKey"), concernCanvas: $("#concernCanvas"), concernTooltip: $("#concernTooltip"),
     intervalLabel: $("#intervalLabel"), concernBadge: $("#concernBadge"),
     scoreCueValue: $("#scoreCueValue"), scoreCueBar: $("#scoreCueBar"),
     morphCueValue: $("#morphCueValue"), morphCueBar: $("#morphCueBar"),
@@ -91,6 +94,7 @@
     certificateRepairDetail: $("#certificateRepairDetail"),
     certificateWitnesses: $("#certificateWitnesses"),
     certificateLimitations: $("#certificateLimitations"), certificateAudit: $("#certificateAudit"),
+    adaptationCanvas: $("#adaptationCanvas"), adaptationState: $("#adaptationState"),
     toastRegion: $("#toastRegion")
   };
 
@@ -146,13 +150,27 @@
     try {
       const payload = await fetchJSON(API.cases, {}, 12000);
       if (!payload || !Array.isArray(payload.cases)) throw new Error("The case catalog response is invalid.");
-      state.cases = payload.cases;
+      // The service keeps legacy research fixtures addressable for tests and
+      // compatibility.  The main interface selector exposes only the
+      // integrity-checked held-out replay presets.
+      state.cases = payload.cases.filter(item => item.benchmark_replay === true);
       dom.caseSelect.replaceChildren();
       if (!state.cases.length) {
-        dom.caseSelect.append(new Option("No packaged cases installed", ""));
-        dom.caseMeta.textContent = "Prepare the packaged synthetic case or install the optional benchmark case.";
+        dom.caseSelect.append(new Option("No packaged replay installed", ""));
+        dom.caseSelect.disabled = true;
+        dom.caseMeta.textContent = "No held-out replay is packaged. Use Upload CSV in review-only mode.";
+        const catalogSource = $('input[name="source"][value="catalog"]');
+        const uploadSource = $('input[name="source"][value="upload"]');
+        catalogSource.disabled = true;
+        catalogSource.setAttribute("aria-disabled", "true");
+        catalogSource.checked = false;
+        uploadSource.checked = true;
+        toggleSource();
         return;
       }
+      const catalogSource = $('input[name="source"][value="catalog"]');
+      catalogSource.disabled = false;
+      catalogSource.removeAttribute("aria-disabled");
       for (const item of state.cases) dom.caseSelect.append(new Option(item.name || item.id, item.id));
       dom.caseSelect.disabled = false;
       updateCaseMeta();
@@ -180,7 +198,6 @@
       dom.severity.disabled = disabled;
       dom.severityValue.textContent = disabled ? "—" : Number(dom.severity.value).toFixed(2);
     });
-    dom.randomizeSeed.addEventListener("click", () => { dom.seed.value = crypto.getRandomValues(new Uint32Array(1))[0] & 0x7fffffff; });
     dom.blendWeight.addEventListener("input", updateBlend);
     dom.resetView.addEventListener("click", resetView);
     dom.exportButton.addEventListener("click", exportResult);
@@ -192,20 +209,39 @@
     const source = $('input[name="source"]:checked').value;
     dom.catalogFields.hidden = source !== "catalog";
     dom.uploadFields.hidden = source !== "upload";
+    if (source === "upload") {
+      dom.family.value = "none";
+      dom.family.disabled = false;
+      dom.severity.disabled = true;
+      dom.severityValue.textContent = "—";
+      dom.start.disabled = false;
+      dom.end.disabled = false;
+    } else {
+      dom.family.disabled = false;
+      updateCaseMeta();
+    }
     hideFormError();
   }
 
   function updateCaseMeta() {
     const item = state.cases.find(c => String(c.id) === dom.caseSelect.value);
     if (!item) return;
-    const details = [item.domain, finite(item.length) ? `${formatInteger(item.length)} samples` : null,
+    const details = [item.domain, item.held_out ? "held-out source group" : null, finite(item.length) ? `[0, ${formatInteger(item.length)})` : null,
       finite(item.sample_rate) ? `${formatNumber(item.sample_rate)} Hz` : null,
       finite(item.anomaly_count) ? `${item.anomaly_count} labelled event${item.anomaly_count === 1 ? "" : "s"}` : null].filter(Boolean);
     dom.caseMeta.textContent = details.join(" · ") || "Packaged case ready.";
     if (finite(item.length)) {
-      dom.start.max = Math.max(0, item.length - 1);
-      dom.length.max = Math.min(2048, item.length);
-      dom.length.value = Math.min(Number(dom.length.value), item.length);
+      dom.start.max = Math.max(0, item.length - 64);
+      dom.end.max = item.length;
+      if (item.fixed_window) {
+        dom.start.value = 0; dom.end.value = item.length;
+        dom.start.disabled = true; dom.end.disabled = true;
+      } else {
+        dom.start.disabled = false; dom.end.disabled = false;
+      }
+      if (item.default_family) dom.family.value = item.default_family;
+      if (finite(item.default_severity)) { dom.severity.disabled = false; dom.severity.value = item.default_severity; updateSeverity(); }
+      if (finite(item.default_replicate)) dom.seed.value = item.default_replicate;
     }
   }
 
@@ -224,10 +260,10 @@
       const text = await file.text();
       const parsed = parseCSV(text);
       state.upload = { name: file.name, ...parsed };
-      dom.fileMeta.textContent = `${file.name} · ${formatInteger(parsed.values.length)} valid samples · value column “${parsed.valueColumn}”`;
+      dom.fileMeta.textContent = `${file.name} · ${formatInteger(parsed.values.length)} valid points · value column “${parsed.valueColumn}” · review only`;
       dom.start.max = Math.max(0, parsed.values.length - 1);
-      dom.length.max = Math.min(2048, parsed.values.length);
-      dom.length.value = Math.min(Number(dom.length.value), parsed.values.length);
+      dom.end.max = parsed.values.length;
+      dom.end.value = Math.min(Math.max(Number(dom.end.value), 64), parsed.values.length, 2048);
       hideFormError();
     } catch (error) {
       state.upload = null;
@@ -266,7 +302,7 @@
       }
     }
     if (values.length < 64) throw new Error("At least 64 finite signal values are required.");
-    if (values.length > 250000) throw new Error("The CSV contains more than 250,000 samples. Select a smaller file.");
+    if (values.length > 250000) throw new Error("The CSV contains more than 250,000 points. Select a smaller file.");
     return { values, timestamps: timeCol >= 0 ? timestamps : undefined, labels: labelCol >= 0 ? labels : undefined, valueColumn: headers[valueCol] };
   }
 
@@ -284,25 +320,30 @@
   }
 
   function updateSeverity() { dom.severityValue.textContent = Number(dom.severity.value).toFixed(2); }
-  function updateBlend() { dom.blendValue.textContent = Number(dom.blendWeight.value).toFixed(2); }
+  function updateBlend() {
+    dom.blendValue.textContent = Number(dom.blendWeight.value).toFixed(2);
+    if (state.result) requestAnimationFrame(drawAdaptationPreview);
+  }
 
   async function runAnalysis(event) {
     event.preventDefault();
     hideFormError();
     const source = $('input[name="source"]:checked').value;
-    const start = Number(dom.start.value), length = Number(dom.length.value), seed = Number(dom.seed.value);
-    if (!Number.isInteger(start) || start < 0) return showFormError("Start index must be a non-negative integer.");
-    if (!Number.isInteger(length) || length < 64 || length > 2048) return showFormError("Window length must be between 64 and 2,048 samples.");
-    if (!Number.isInteger(seed) || seed < 0) return showFormError("Random seed must be a non-negative integer.");
+    const start = Number(dom.start.value), end = Number(dom.end.value), replicate = Number(dom.seed.value);
+    const length = end - start;
+    if (!Number.isInteger(start) || start < 0) return showFormError("Start must be a non-negative integer.");
+    if (!Number.isInteger(end) || end <= start) return showFormError("End must be greater than Start.");
+    if (!Number.isInteger(length) || length < 64 || length > 2048) return showFormError("The interval must contain between 64 and 2,048 points.");
+    if (!Number.isInteger(replicate) || replicate < 0 || replicate > 1) return showFormError("Replicate must be 0 or 1.");
     if (source === "catalog" && !dom.caseSelect.value) return showFormError("Select an installed packaged case.");
     if (source === "upload" && !state.upload) return showFormError("Choose a valid CSV file first.");
     const sourceLength = source === "upload" ? state.upload.values.length : state.cases.find(c => String(c.id) === dom.caseSelect.value)?.length;
-    if (finite(sourceLength) && start + length > sourceLength) return showFormError(`The requested window ends at ${start + length}, beyond the available ${sourceLength} samples.`);
+    if (finite(sourceLength) && end > sourceLength) return showFormError(`The requested interval ends at ${end}, beyond the available ${sourceLength} points.`);
 
     const payload = {
       case_id: source === "catalog" ? dom.caseSelect.value : undefined,
       upload: source === "upload" ? { name: state.upload.name, values: state.upload.values, timestamps: state.upload.timestamps, labels: state.upload.labels } : undefined,
-      corruption: { family: dom.family.value, severity: dom.family.value === "none" ? 0 : Number(dom.severity.value), seed },
+      corruption: { family: dom.family.value, severity: dom.family.value === "none" ? 0 : Number(dom.severity.value), replicate, seed: replicate },
       window: { start, length }
     };
     const requestBody = JSON.stringify(payload);
@@ -316,10 +357,16 @@
     try {
       const response = await fetchJSON(API.analyze, { method: "POST", body: requestBody });
       state.result = validateResult(response);
-      state.selection = null;
+      state.automaticModel = [...state.result.series.our_model];
+      const suggested = state.result.meta?.suggested_expert_interval;
+      state.selection = Array.isArray(suggested) && suggested.length === 2
+        ? { start: Number(suggested[0]), end: Number(suggested[1]) - 1 }
+        : null;
       state.view = { start: 0, end: state.result.series.observed.length - 1 };
       showResults();
-      toast("Comparison complete. Inspect the synchronized plots or select a concern interval.");
+      toast(source === "catalog"
+        ? "Held-out comparison ready. Inspect the synchronized plots or adapt the selected interval."
+        : "Review-only analysis ready. No calibrated A/B decision applies to this upload.");
       setHealth("online", "Analysis service ready");
     } catch (error) {
       showFormError(error.message);
@@ -331,22 +378,30 @@
 
   function validateResult(value) {
     if (!value || typeof value !== "object" || !value.session_id) throw new Error("The analysis response is missing a session identifier.");
-    if (!value.series || !Array.isArray(value.series.observed) || !Array.isArray(value.series.denoiseapt) || !Array.isArray(value.series.automatic) || !Array.isArray(value.series.hybrid)) throw new Error("The analysis response is missing required signal arrays.");
+    if (!value.series || !Array.isArray(value.series.observed)) throw new Error("The analysis response is missing the observed signal.");
+    if (!Array.isArray(value.series.our_model)) {
+      value.series.our_model = value.series.automatic || value.series.denoiseapt;
+    }
+    if (!Array.isArray(value.series.our_model)) throw new Error("The analysis response is missing Our Model output.");
     const n = value.series.observed.length;
-    if (n < 2 || value.series.denoiseapt.length !== n || value.series.automatic.length !== n || value.series.hybrid.length !== n) throw new Error("The analysis response contains incompatible signal lengths.");
+    if (n < 2 || value.series.our_model.length !== n) throw new Error("The analysis response contains incompatible signal lengths.");
     for (const [name, array] of Object.entries(value.series)) {
       if (array != null && (!Array.isArray(array) || array.length !== n)) throw new Error(`Signal “${name}” has an incompatible length.`);
     }
-    if (!value.scores || !Array.isArray(value.scores.observed) || !Array.isArray(value.scores.denoiseapt) || !Array.isArray(value.scores.automatic) || !Array.isArray(value.scores.hybrid)) throw new Error("The response is missing anomaly scores.");
+    if (!value.scores || !Array.isArray(value.scores.observed)) throw new Error("The response is missing observation scores.");
+    if (!Array.isArray(value.scores.our_model)) {
+      value.scores.our_model = value.scores.automatic || value.scores.denoiseapt;
+    }
+    if (!Array.isArray(value.scores.our_model)) throw new Error("The response is missing Our Model scores.");
     for (const [name, array] of Object.entries(value.scores)) {
       if (array != null && (!Array.isArray(array) || array.length !== n)) throw new Error(`Score “${name}” has an incompatible length.`);
     }
-    if (!value.automatic_control || typeof value.automatic_control !== "object") throw new Error("The response is missing automatic-preservation status.");
-    if (!value.hybrid_control || typeof value.hybrid_control !== "object") throw new Error("The response is missing evidence-gated hybrid status.");
-    if (!value.concern || !Array.isArray(value.concern.values) || value.concern.values.length !== n) throw new Error("The response is missing the preservation-concern timeline.");
+    if (!value.automatic_control || typeof value.automatic_control !== "object") throw new Error("The response is missing the configured evidence status.");
+    if (!value.concern || !Array.isArray(value.concern.values) || value.concern.values.length !== n) throw new Error("The response is missing the local comparison timeline.");
     value.time = Array.isArray(value.time) && value.time.length === n ? value.time : Array.from({ length: n }, (_, i) => i);
     value.cues = value.cues || {};
     value.metrics = value.metrics || {};
+    if (!value.metrics.our_model && value.metrics.automatic) value.metrics.our_model = value.metrics.automatic;
     value.anomaly_intervals = Array.isArray(value.anomaly_intervals) ? value.anomaly_intervals : [];
     value.history_depth = finite(value.history_depth) ? Number(value.history_depth) : 0;
     value.revision = finite(value.revision) ? Number(value.revision) : 0;
@@ -366,6 +421,7 @@
     dom.caseHeading.textContent = [meta.case_name || state.upload?.name || "Analysis window", meta.domain, meta.corruption?.family ? `${capitalize(meta.corruption.family)} corruption` : null].filter(Boolean).join(" · ");
     dom.resetView.disabled = false;
     dom.exportButton.disabled = false;
+    configureConcernPresentation();
     buildSignalPlots();
     buildLegends();
     updateActions();
@@ -380,7 +436,7 @@
     state.plotEntries = [];
     for (const key of SIGNAL_ORDER) {
       const values = state.result.series[key];
-      if (!Array.isArray(values) || (key === "approved" && arraysEqual(values, state.result.series.automatic))) continue;
+      if (!Array.isArray(values)) continue;
       const fragment = dom.plotTemplate.content.cloneNode(true);
       const article = $(".mini-plot", fragment), canvas = $("canvas", fragment), tooltip = $(".plot-tooltip", fragment);
       $("h4", fragment).textContent = METHOD_LABELS[key] || key;
@@ -395,10 +451,10 @@
 
   function buildLegends() {
     dom.signalLegend.replaceChildren(...SIGNAL_ORDER
-      .filter(key => Array.isArray(state.result.series[key]) && !(key === "approved" && arraysEqual(state.result.series.approved, state.result.series.automatic)))
+      .filter(key => Array.isArray(state.result.series[key]))
       .map(key => legendItem(key)));
     dom.scoreLegend.replaceChildren(...SCORE_ORDER
-      .filter(key => Array.isArray(state.result.scores[key]) && !(key === "approved" && arraysEqual(state.result.series.approved, state.result.series.automatic)))
+      .filter(key => Array.isArray(state.result.scores[key]))
       .map(key => legendItem(key)));
   }
 
@@ -414,6 +470,7 @@
     for (const entry of state.plotEntries) drawLinePlot(entry);
     drawScorePlot();
     drawConcernPlot();
+    drawAdaptationPreview();
   }
 
   function setupCanvas(canvas) {
@@ -444,14 +501,43 @@
     if (!dom.scoreCanvas.dataset.bound) { attachPlotInteractions(entry); dom.scoreCanvas.dataset.bound = "true"; }
     const { ctx, width, height } = setupCanvas(dom.scoreCanvas);
     const pad = { left: 48, right: 12, top: 10, bottom: 24 }, range = visibleRange();
-    const keys = SCORE_ORDER.filter(k => Array.isArray(state.result.scores[k]) && !(k === "approved" && arraysEqual(state.result.series.approved, state.result.series.automatic)));
+    const keys = SCORE_ORDER.filter(k => Array.isArray(state.result.scores[k]));
     const [rawMin, rawMax] = dataExtent(keys.map(k => state.result.scores[k]), range.start, range.end);
     const yMin = Math.min(0, rawMin), yMax = rawMax;
     ctx.clearRect(0, 0, width, height);
     drawGrid(ctx, width, height, pad, yMin, yMax, range);
     drawIntervals(ctx, width, height, pad, range);
     drawSelection(ctx, width, height, pad, range);
-    for (const key of keys) drawLine(ctx, state.result.scores[key], COLORS[key], width, height, pad, range, yMin, yMax, key === "approved" || key === "automatic" ? 2.2 : 1.35);
+    for (const key of keys) drawLine(ctx, state.result.scores[key], COLORS[key], width, height, pad, range, yMin, yMax, key === "our_model" ? 2.2 : 1.35);
+  }
+
+  function drawAdaptationPreview() {
+    if (!dom.adaptationCanvas) return;
+    const { ctx, width, height } = setupCanvas(dom.adaptationCanvas);
+    ctx.clearRect(0, 0, width, height);
+    if (!state.result || !state.selection) {
+      dom.adaptationState.textContent = "Select an interval";
+      return;
+    }
+    const start = state.selection.start, end = state.selection.end;
+    const range = { start, end }, pad = { left: 48, right: 12, top: 8, bottom: 22 };
+    const observed = state.result.series.observed;
+    const automatic = Array.isArray(state.automaticModel)
+      ? state.automaticModel : state.result.series.our_model;
+    const beta = Number(dom.blendWeight.value);
+    const preview = [...automatic];
+    for (let index = start; index <= end; index++) {
+      preview[index] = beta * observed[index] + (1 - beta) * automatic[index];
+    }
+    const arrays = [observed, automatic, preview].filter(Array.isArray);
+    const [yMin, yMax] = dataExtent(arrays, start, end);
+    drawGrid(ctx, width, height, pad, yMin, yMax, range);
+    drawLine(ctx, automatic, COLORS.automaticBaseline, width, height, pad, range, yMin, yMax, 1.35);
+    drawLine(ctx, observed, COLORS.observed, width, height, pad, range, yMin, yMax, 1.35);
+    drawLine(ctx, preview, COLORS.adaptedPreview, width, height, pad, range, yMin, yMax, 2.2);
+    dom.adaptationState.textContent = state.result.automatic_control?.current_is_automatic === false
+      ? `Adapted output · preview β=${beta.toFixed(2)}`
+      : `Automatic output · preview β=${beta.toFixed(2)}`;
   }
 
   function drawConcernPlot() {
@@ -600,7 +686,10 @@
     if (entry.type === "score") {
       for (const key of SCORE_ORDER) if (Array.isArray(state.result.scores[key])) lines.push(`${METHOD_LABELS[key]}: ${formatNumber(state.result.scores[key][index], 4)}`);
     }
-    if (entry.type === "concern") lines.push(`Concern: ${formatNumber(state.result.concern.values[index], 3)}`);
+    if (entry.type === "concern") {
+      const label = isBenchmarkReplay() ? "Shared evidence" : "Comparison cue";
+      lines.push(`${label}: ${formatNumber(state.result.concern.values[index], 3)}`);
+    }
     tooltip.textContent = lines.join(" · "); tooltip.hidden = false;
     const rect = entry.canvas.getBoundingClientRect();
     tooltip.style.left = `${clamp(event.clientX - rect.left + 10, 4, Math.max(4, rect.width - tooltip.offsetWidth - 5))}px`;
@@ -612,12 +701,15 @@
 
   function updateInspector() {
     if (!state.result || !state.selection) {
-      dom.intervalLabel.textContent = "Select a region in a plot or concern timeline.";
+      dom.intervalLabel.textContent = "Select a time interval in a plot or evidence timeline.";
       setConcernBadge(null); setCue(dom.scoreCueValue, dom.scoreCueBar, null); setCue(dom.morphCueValue, dom.morphCueBar, null); setCue(dom.uncertaintyCueValue, dom.uncertaintyCueBar, null); return;
     }
     const { start, end } = state.selection;
-    dom.intervalLabel.textContent = `${formatTimeAt(start)}–${formatTimeAt(end)} · indices ${start}–${end} · ${end - start + 1} samples`;
-    const concern = meanSlice(state.result.concern.values, start, end), level = concern >= .62 ? "high" : concern >= .32 ? "medium" : "low";
+    dom.intervalLabel.textContent = `[${start}, ${end + 1}) · ${end - start + 1} time points`;
+    const concern = meanSlice(state.result.concern.values, start, end);
+    const level = isBenchmarkReplay()
+      ? (concern >= .5 ? "shared" : "none")
+      : (concern >= .62 ? "high" : concern >= .32 ? "medium" : "low");
     setConcernBadge(level, concern);
     setCue(dom.scoreCueValue, dom.scoreCueBar, cueMean("score_change", start, end));
     setCue(dom.morphCueValue, dom.morphCueBar, cueMean("morphology", start, end));
@@ -627,7 +719,48 @@
   function cueMean(key, start, end) { const array = state.result.cues?.[key]; return Array.isArray(array) ? meanSlice(array, start, end) : null; }
   function setConcernBadge(level, value) {
     dom.concernBadge.className = `concern-badge is-${level || "neutral"}`;
-    dom.concernBadge.textContent = level ? `${capitalize(level)} · ${formatNumber(value, 2)}` : "None";
+    if (!level) {
+      dom.concernBadge.textContent = "None";
+      return;
+    }
+    const label = isBenchmarkReplay()
+      ? (level === "shared" ? "Shared support" : "No shared support")
+      : `${capitalize(level)} cue`;
+    dom.concernBadge.textContent = `${label} · ${formatNumber(value, 2)}`;
+  }
+
+  function isBenchmarkReplay() {
+    return Boolean(state.result?.meta?.benchmark_replay);
+  }
+
+  function concernKeyItem(className, label) {
+    const item = document.createElement("span"), swatch = document.createElement("i");
+    swatch.className = className;
+    item.append(swatch, document.createTextNode(label));
+    return item;
+  }
+
+  function configureConcernPresentation() {
+    if (isBenchmarkReplay()) {
+      dom.concernTitle.textContent = "Local preservation evidence";
+      dom.concernDescription.textContent = "Shared configured Scorer-A support between the observation and Our Model. Click or drag to select an interval.";
+      dom.concernKey.setAttribute("aria-label", "Preservation-evidence key");
+      dom.concernKey.replaceChildren(
+        concernKeyItem("none", "No shared support"),
+        concernKeyItem("shared", "Shared support")
+      );
+      dom.concernCanvas.setAttribute("aria-label", "Local configured preservation evidence over time");
+      return;
+    }
+    dom.concernTitle.textContent = "Local comparison cue";
+    dom.concernDescription.textContent = "Review-only observation-versus-output comparison cue. It is not calibrated preservation evidence. Click or drag to select an interval.";
+    dom.concernKey.setAttribute("aria-label", "Review-only comparison-cue key");
+    dom.concernKey.replaceChildren(
+      concernKeyItem("low", "Low cue"),
+      concernKeyItem("medium", "Medium cue"),
+      concernKeyItem("high", "High cue")
+    );
+    dom.concernCanvas.setAttribute("aria-label", "Review-only local comparison cue over time");
   }
   function setCue(output, bar, value) {
     output.textContent = finite(value) ? formatNumber(value, 3) : "—";
@@ -637,7 +770,7 @@
   function updateActions() {
     const hasResult = Boolean(state.result), hasSelection = Boolean(state.selection), history = Number(state.result?.history_depth || 0);
     for (const button of $$(".action-button")) {
-      if (button.dataset.action === "accept" || button.dataset.action === "restore_automatic") button.disabled = !hasResult || state.actionPending;
+      if (button.dataset.action === "restore_automatic") button.disabled = !hasResult || state.actionPending;
       else if (button.dataset.action === "revert") button.disabled = !hasResult || state.actionPending || history < 1;
       else button.disabled = !hasResult || !hasSelection || state.actionPending;
     }
@@ -646,22 +779,27 @@
 
   async function applyIntervention(action) {
     if (!state.result || state.actionPending) return;
-    const n = state.result.series.observed.length, intervalRequired = action === "protect" || action === "blend";
+    const n = state.result.series.observed.length, intervalRequired = action === "blend";
     if (intervalRequired && !state.selection) return toast("Select an interval before applying this action.", true);
     const range = state.selection || { start: 0, end: n - 1 };
     const payload = { session_id: state.result.session_id, action, start: range.start, end: Math.min(n, range.end + 1), beta: Number(dom.blendWeight.value), expected_revision: Number(state.result.revision || 0) };
     state.actionPending = true; updateActions();
     try {
       const response = await fetchJSON(API.intervene, { method: "POST", body: JSON.stringify(payload) }, 60000);
-      if (!response.series || !Array.isArray(response.series.approved) || response.series.approved.length !== n) throw new Error("The intervention response is missing the approved signal.");
-      state.result.series.approved = response.series.approved;
-      if (response.scores?.approved) state.result.scores.approved = response.scores.approved;
-      if (response.metrics?.approved) state.result.metrics.approved = response.metrics.approved;
+      const output = response.series?.our_model || response.series?.approved;
+      if (!Array.isArray(output) || output.length !== n) throw new Error("The intervention response is missing Our Model output.");
+      state.result.series.our_model = output;
+      const scores = response.scores?.our_model || response.scores?.approved;
+      if (scores) state.result.scores.our_model = scores;
+      const metrics = response.metrics?.our_model || response.metrics?.approved;
+      if (metrics) state.result.metrics.our_model = metrics;
+      if (response.concern) state.result.concern = response.concern;
+      if (response.cues) state.result.cues = response.cues;
       if (response.automatic_control) state.result.automatic_control = { ...state.result.automatic_control, ...response.automatic_control };
       state.result.history_depth = finite(response.history_depth) ? response.history_depth : state.result.history_depth;
       state.result.revision = finite(response.revision) ? response.revision : state.result.revision;
       buildSignalPlots(); buildLegends(); renderCertification(); renderMetrics(); requestAnimationFrame(renderAll);
-      const label = action === "restore_automatic" ? "Automatic baseline restored" : `${capitalize(action)} applied${intervalRequired ? ` to indices ${range.start}–${range.end}` : ""}`;
+      const label = action === "restore_automatic" ? "Automatic model restored" : action === "revert" ? "Previous state restored" : `Expert weight applied to [${range.start}, ${range.end + 1})`;
       toast(`${label}.`);
     } catch (error) { toast(error.message, true); }
     finally { state.actionPending = false; updateActions(); }
@@ -670,10 +808,13 @@
   function renderMetrics() {
     dom.metricsBody.replaceChildren();
     const rows = SIGNAL_ORDER
-      .filter(key => key !== "reference" && key !== "observed")
-      .filter(key => state.result.metrics[key] && !(key === "approved" && arraysEqual(state.result.series.approved, state.result.series.automatic)));
+      .filter(key => key !== "reference")
+      .filter(key => {
+        const metric = state.result.metrics[key];
+        return metric && (finite(metric.overall_os_nrmse) || finite(metric.anomaly_os_nrmse));
+      });
     if (!rows.length) {
-      const row = dom.metricsBody.insertRow(), cell = row.insertCell(); cell.colSpan = 8; cell.className = "not-available"; cell.textContent = "No evaluation measures were returned for this case."; return;
+      const row = dom.metricsBody.insertRow(), cell = row.insertCell(); cell.colSpan = 3; cell.className = "not-available"; cell.textContent = "Matched-window measures are available only for the held-out replay."; return;
     }
     const hasReference = Array.isArray(state.result.series.reference);
     const benchmarkCase = Boolean(state.result.meta?.benchmark_case);
@@ -685,15 +826,13 @@
         : hasReference ? "Controlled reference evaluation" : "Observation-only case";
     for (const key of rows) {
       const metric = state.result.metrics[key] || {}, row = dom.metricsBody.insertRow();
-      if (key === "approved") row.classList.add("is-approved");
-      const values = [METHOD_LABELS[key] || key, metric.rmse, metric.snr_improvement, metric.vus_pr_approx ?? metric.vus_pr, metric.event_recall, metric.erasure_rate, metric.false_event_rate, metric.latency_ms];
+      if (key === "our_model") row.classList.add("is-approved");
+      const values = [METHOD_LABELS[key] || key, metric.overall_os_nrmse, metric.anomaly_os_nrmse];
       values.forEach((value, index) => {
         const cell = row.insertCell();
         if (index === 0) cell.textContent = value;
         else if (!finite(value)) { cell.textContent = "—"; cell.className = "not-available"; }
-        else if (index === 7) cell.textContent = `${formatNumber(value, 1)} ms`;
-        else if ([4,5,6].includes(index)) cell.textContent = `${formatNumber(Number(value) * 100, 1)}%`;
-        else cell.textContent = formatNumber(value, 3);
+        else cell.textContent = formatNumber(value, 4);
       });
     }
   }
@@ -701,6 +840,7 @@
   function renderCertification() {
     const control = state.result?.automatic_control || {};
     const certificate = control.certificate || {};
+    const benchmarkReplay = control.mode === "heldout_benchmark_replay";
     const reviewOnly = control.mode === "review_only" || !control.certification_eligible;
     const status = String(certificate.status || "unverified");
     const passed = certificate.passed === true;
@@ -712,35 +852,36 @@
     dom.certificationBadge.textContent = reviewOnly
       ? "Review-only"
       : passed
-        ? currentIsAutomatic ? "Witness certificate passed" : "Rechecked: passed"
-        : status === "overridden" ? "Override outside contract" : "Witness check failed";
+        ? currentIsAutomatic ? "Configured A/B check passed" : "Fresh A/B recheck passed"
+        : "Configured A/B check failed";
     dom.certificationSummary.textContent = reviewOnly
-      ? `No automatic certificate is issued. ${control.eligibility_reason || certificate.error || "Threshold provenance is out of scope."}`
+      ? `No configured A/B decision is issued. ${control.eligibility_reason || certificate.error || "Threshold provenance is out of scope."}`
       : passed && retentionEvents === 0
-        ? "The current signal passes A/B non-emergence checks, but this window has no observation-supported threshold events; the retention clause has zero opportunities."
-        : `The current signal ${passed ? "satisfies" : "does not satisfy"} the frozen A/B retention and non-emergence checks. This is not a claim of physical anomaly truth.`;
-    dom.certificateMode.textContent = reviewOnly ? "Review-only" : "A/B witness-bound";
+        ? "The current signal passes A/B non-emergence checks; this condition contains no observation-supported threshold component to retain."
+        : `The current signal ${passed ? "satisfies" : "does not satisfy"} the configured A/B observation-component checks. This is not a claim of physical anomaly truth.`;
+    dom.certificateMode.textContent = reviewOnly ? "Review-only" : benchmarkReplay ? "Held-out replay" : "A/B configured";
     const decision = control.decision || "human override";
     dom.certificateDecision.textContent = `${capitalize(String(decision).replaceAll("_", " "))}${control.auto_committed === false ? " · not auto-committed" : ""}`;
     const repairs = Array.isArray(control.repair_intervals) ? control.repair_intervals : Array.isArray(control.intervals) ? control.intervals : [];
-    dom.certificateRepairs.textContent = reviewOnly ? "Not applied" : String(repairs.length);
-    dom.certificateLatency.textContent = finite(control.controller_latency_ms) ? `${formatNumber(control.controller_latency_ms, 2)} ms` : "—";
+    const expertActions = control.human_intervention?.actions || [];
+    dom.certificateRepairs.textContent = reviewOnly ? "Not applied" : String(expertActions.length);
+    dom.certificateLatency.textContent = reviewOnly ? "Not available" : passed ? "Pass" : "Fail";
     const scope = control.runtime_provenance?.threshold_scope || control.provenance?.threshold_scope || {};
     dom.certificateScope.textContent = reviewOnly
-      ? "Scores and concern cues remain available for inspection, but the automatic output is not certified or auto-committed."
-      : `${scope.calibration_domain || "Frozen calibration domain"}; ${scope.window_length || "fixed"}-sample windows; configured witnesses A and B only.`;
+      ? "Scores and comparison cues remain available for inspection, but no calibrated A/B threshold decision or automatic commitment applies."
+      : `${scope.calibration_domain || "Frozen calibration domain"}; [0, ${scope.window_length || 512}) window; configured Scorers A and B only.`;
     dom.certificateRepairDetail.textContent = reviewOnly
       ? "not applied in review-only mode"
-      : repairs.length
-        ? repairs.slice(0, 8).map(item => `[${item.start}, ${item.end}) β=${formatNumber(item.beta, 2)} ${item.action || "repair"}`).join("; ") + (repairs.length > 8 ? `; +${repairs.length - 8} more` : "")
-        : "no repair was required; the generative repair candidate passed";
+      : expertActions.length
+        ? expertActions.slice(-4).map(item => `${item.action} [${item.start}, ${item.end})${finite(item.beta) ? ` β=${formatNumber(item.beta, 2)}` : ""}`).join("; ")
+        : "no expert adaptation; showing the automatic model output";
     dom.certificateWitnesses.textContent = certificateWitnessRows.length
       ? certificateWitnessRows.map(item => `${item.witness_id}: ${item.preservation_passed && item.fabrication_passed ? "pass" : "fail"} (${Array.isArray(item.event_output_peaks) ? item.event_output_peaks.length : 0} retention events)`).join("; ")
       : "not evaluated";
     dom.certificateLimitations.replaceChildren();
     const limitations = Array.isArray(certificate.limitations) ? certificate.limitations : [];
     for (const item of limitations) { const li = document.createElement("li"); li.textContent = item; dom.certificateLimitations.append(li); }
-    dom.certificateAudit.textContent = control.audit?.decision_hash || "not available in review-only mode";
+    dom.certificateAudit.textContent = control.runtime_provenance?.condition_id || control.audit?.decision_hash || "not available in review-only mode";
   }
 
   function zoomView(anchor, factor) {
@@ -755,7 +896,7 @@
 
   function exportResult() {
     if (!state.result) return;
-    const payload = { exported_at: new Date().toISOString(), session_id: state.result.session_id, meta: state.result.meta, selection: state.selection, series: state.result.series, scores: state.result.scores, automatic_control: state.result.automatic_control, hybrid_control: state.result.hybrid_control, concern: state.result.concern, cues: state.result.cues, anomaly_intervals: state.result.anomaly_intervals, metrics: state.result.metrics };
+    const payload = { exported_at: new Date().toISOString(), session_id: state.result.session_id, meta: state.result.meta, selection: state.selection, series: state.result.series, scores: state.result.scores, automatic_control: state.result.automatic_control, concern: state.result.concern, cues: state.result.cues, anomaly_intervals: state.result.anomaly_intervals, metrics: state.result.metrics };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }), link = document.createElement("a");
     link.href = URL.createObjectURL(blob); link.download = `denoiseapt-${safeFilename(state.result.meta?.case_name || "result")}.json`; link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 1000); toast("Result exported as JSON.");
@@ -776,7 +917,10 @@
     const margin = (max - min) * .08; return [min - margin, max + margin];
   }
   function meanSlice(array, start, end) { let sum = 0, count = 0; for (let i = start; i <= end; i++) { const value = Number(array[i]); if (Number.isFinite(value)) { sum += value; count++; } } return count ? sum / count : null; }
-  function concernColor(value) { return value >= .62 ? "#d56366" : value >= .32 ? "#e4a44e" : "#79b8a5"; }
+  function concernColor(value) {
+    if (isBenchmarkReplay()) return value >= .5 ? "#15968f" : "#e3ecec";
+    return value >= .62 ? "#d56366" : value >= .32 ? "#e4a44e" : "#79b8a5";
+  }
   function formatTimeAt(index) { const value = state.result?.time?.[index]; if (value == null) return String(index); if (typeof value === "number") return formatNumber(value, 2); const text = String(value); return text.length > 18 ? text.slice(0, 18) : text; }
   function formatNumber(value, digits = 2) { return finite(value) ? Number(value).toLocaleString(undefined, { maximumFractionDigits: digits }) : "—"; }
   function shortNumber(value) { const abs = Math.abs(value); if (abs >= 10000 || (abs > 0 && abs < .001)) return Number(value).toExponential(1); return formatNumber(value, abs < 10 ? 2 : 1); }

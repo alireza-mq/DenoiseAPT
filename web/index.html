@@ -32,16 +32,16 @@
     <section class="control-rail" aria-labelledby="setupTitle">
       <div class="rail-intro">
         <p class="step-kicker">Stage 1</p>
-        <h2 id="setupTitle">Prepare the case</h2>
-        <p>Select a packaged case or inspect your own univariate signal.</p>
+        <h2 id="setupTitle">Select a time window</h2>
+        <p>Replay a held-out benchmark window or inspect a compatible local CSV in review-only mode.</p>
       </div>
 
       <form id="analysisForm" novalidate>
         <fieldset>
           <legend>Data source</legend>
           <div class="segmented" role="radiogroup" aria-label="Data source">
-            <label><input type="radio" name="source" value="catalog" checked><span>Packaged case</span></label>
-            <label><input type="radio" name="source" value="upload"><span>Upload CSV</span></label>
+            <label><input type="radio" name="source" value="catalog" checked><span>Held-out benchmark</span></label>
+            <label><input type="radio" name="source" value="upload"><span>Upload CSV · review only</span></label>
           </div>
 
           <div id="catalogFields" class="field-stack">
@@ -49,35 +49,36 @@
             <select id="caseSelect" name="case" disabled>
               <option value="">Loading cases…</option>
             </select>
-            <p id="caseMeta" class="field-note">Cases are loaded from the local dataset package.</p>
+            <p id="caseMeta" class="field-note">Only explicitly supported held-out benchmark presets are listed.</p>
           </div>
 
           <div id="uploadFields" class="field-stack" hidden>
             <label class="file-drop" for="csvFile">
               <span class="file-drop-title">Choose a CSV file</span>
-              <span>One numeric value column; an optional time column is supported.</span>
+              <span>Header plus one numeric signal column; optional time and 0/1 label columns.</span>
               <input id="csvFile" type="file" accept=".csv,text/csv">
             </label>
-            <p id="fileMeta" class="field-note">The file is parsed locally before analysis.</p>
+            <p id="fileMeta" class="field-note">Compatible univariate CSVs are processed locally in review-only mode. Unseen domains are not claimed to be supported without adaptation.</p>
           </div>
         </fieldset>
 
         <fieldset>
-          <legend>Window</legend>
+          <legend>Time window</legend>
           <div class="two-fields">
             <div>
-              <label for="windowStart">Start index</label>
+              <label for="windowStart">Start</label>
               <input id="windowStart" type="number" min="0" value="0" step="1">
             </div>
             <div>
-              <label for="windowLength">Samples</label>
-              <input id="windowLength" type="number" min="64" max="2048" value="512" step="1">
+              <label for="windowEnd">End</label>
+              <input id="windowEnd" type="number" min="64" max="2048" value="512" step="1">
             </div>
           </div>
         </fieldset>
 
         <fieldset>
-          <legend>Controlled corruption</legend>
+          <legend>Demonstration-only corruption</legend>
+          <p class="field-note">Injected only for controlled evaluation of a known reference. It is not part of normal inference.</p>
           <label for="corruptionFamily">Family</label>
           <select id="corruptionFamily">
             <option value="gaussian">Gaussian</option>
@@ -90,16 +91,15 @@
           <div class="range-row">
             <div class="range-heading">
               <label for="severity">Severity</label>
-              <output id="severityValue" for="severity">0.35</output>
+            <output id="severityValue" for="severity">0.75</output>
             </div>
-            <input id="severity" type="range" min="0" max="1" step="0.05" value="0.35">
-            <div class="range-labels" aria-hidden="true"><span>Subtle</span><span>Severe</span></div>
+            <input id="severity" type="range" min="0.25" max="0.75" step="0.25" value="0.75">
+            <div class="range-labels" aria-hidden="true"><span>0.25</span><span>0.75</span></div>
           </div>
 
-          <label for="seed">Random seed</label>
+          <label for="seed">Replicate</label>
           <div class="input-action">
-            <input id="seed" type="number" min="0" max="2147483647" value="17" step="1">
-            <button id="randomizeSeed" class="icon-button" type="button" aria-label="Generate a new random seed" title="New random seed">↻</button>
+            <input id="seed" type="number" min="0" max="1" value="1" step="1">
           </div>
         </fieldset>
 
@@ -140,15 +140,15 @@
             <div id="signalLegend" class="legend" aria-label="Signal legend"></div>
           </div>
           <div id="signalPlots" class="small-multiples"></div>
-          <p id="plotReadout" class="plot-readout" aria-live="polite">Move over a plot to read sample values.</p>
+          <p id="plotReadout" class="plot-readout" aria-live="polite">Move over a plot to read time-point values.</p>
         </section>
 
         <section class="analysis-grid">
           <div class="plot-card evidence-card">
             <div class="card-heading">
               <div>
-                <h3>Anomaly evidence</h3>
-                <p>Scores from frozen witness A; certification, when available, checks both A and B.</p>
+              <h3>Anomaly-preservation evidence</h3>
+              <p>Configured Scorer-A traces for the corrupted observation and the current model output; the status check uses Scorers A and B.</p>
               </div>
               <div id="scoreLegend" class="legend" aria-label="Anomaly score legend"></div>
             </div>
@@ -161,19 +161,19 @@
           <aside class="inspector-card" aria-labelledby="inspectorTitle">
             <div class="card-heading">
               <div>
-                <p class="step-kicker">Selected interval</p>
+                <p class="step-kicker">Selected time interval</p>
                 <h3 id="inspectorTitle">Interval inspector</h3>
               </div>
               <span id="concernBadge" class="concern-badge is-neutral">None</span>
             </div>
-            <p id="intervalLabel" class="interval-label">Select a region in a plot or concern timeline.</p>
+            <p id="intervalLabel" class="interval-label">Select a region in a plot or evidence timeline.</p>
             <div class="cue-list" aria-label="Preservation concern cues">
               <div class="cue-row">
-                <div><span>Score change</span><output id="scoreCueValue">—</output></div>
+                <div><span>Scorer-A difference</span><output id="scoreCueValue">—</output></div>
                 <div class="cue-track"><span id="scoreCueBar"></span></div>
               </div>
               <div class="cue-row">
-                <div><span>Morphology change</span><output id="morphCueValue">—</output></div>
+                <div><span>Signal difference</span><output id="morphCueValue">—</output></div>
                 <div class="cue-track"><span id="morphCueBar"></span></div>
               </div>
               <div class="cue-row">
@@ -181,22 +181,22 @@
                 <div class="cue-track"><span id="uncertaintyCueBar"></span></div>
               </div>
             </div>
-            <p class="inspector-note">These are inspection cues, not calibrated failure probabilities. The live protocol uses one deterministic pass, so stochastic disagreement is not estimated.</p>
+            <p class="inspector-note">These are configured comparison cues, not calibrated anomaly probabilities. Reference labels remain evaluation-only.</p>
           </aside>
         </section>
 
         <section class="plot-card concern-card" aria-labelledby="concernTitle">
           <div class="card-heading compact">
             <div>
-              <h3 id="concernTitle">Local preservation concern</h3>
-              <p>Click or drag to select a region for intervention.</p>
+              <h3 id="concernTitle">Local preservation evidence</h3>
+              <p id="concernDescription">Shared configured Scorer-A support between the observation and Our Model. Click or drag to select an interval.</p>
             </div>
-            <div class="concern-key" aria-label="Concern levels">
-              <span><i class="low"></i>Low</span><span><i class="medium"></i>Medium</span><span><i class="high"></i>High</span>
+            <div id="concernKey" class="concern-key" aria-label="Preservation-evidence key">
+              <span><i class="none"></i>No shared support</span><span><i class="shared"></i>Shared support</span>
             </div>
           </div>
           <div class="canvas-wrap concern-wrap">
-            <canvas id="concernCanvas" tabindex="0" aria-label="Local preservation concern over time"></canvas>
+            <canvas id="concernCanvas" tabindex="0" aria-label="Local configured preservation evidence over time"></canvas>
             <div class="plot-tooltip" id="concernTooltip" hidden></div>
           </div>
         </section>
@@ -204,49 +204,57 @@
         <section id="certificationCard" class="certification-card is-review" aria-labelledby="certificationTitle">
           <div class="certification-heading">
             <div>
-              <p class="step-kicker">Automatic preservation</p>
-              <h3 id="certificationTitle">Controller status</h3>
+            <p class="step-kicker">Automatic model response</p>
+            <h3 id="certificationTitle">Configured evidence status</h3>
             </div>
             <span id="certificationBadge" class="certificate-badge is-unverified">Not evaluated</span>
           </div>
-          <p id="certificationSummary" class="certification-summary">Run a case to inspect its threshold-provenance and witness certificate.</p>
+          <p id="certificationSummary" class="certification-summary">Run a case to inspect its frozen Scorer-A/B evidence record.</p>
           <dl class="certificate-facts">
-            <div><dt>Mode</dt><dd id="certificateMode">—</dd></div>
-            <div><dt>Decision</dt><dd id="certificateDecision">—</dd></div>
-            <div><dt>Repair intervals</dt><dd id="certificateRepairs">—</dd></div>
-            <div><dt>Controller latency</dt><dd id="certificateLatency">—</dd></div>
+            <div><dt>Scope</dt><dd id="certificateMode">—</dd></div>
+            <div><dt>Current state</dt><dd id="certificateDecision">—</dd></div>
+            <div><dt>Expert adaptations</dt><dd id="certificateRepairs">—</dd></div>
+            <div><dt>Check status</dt><dd id="certificateLatency">—</dd></div>
           </dl>
           <details class="certificate-details">
-            <summary>Certificate scope and audit</summary>
+            <summary>Evidence scope and provenance</summary>
             <p id="certificateScope"></p>
-            <p><strong>Repair map:</strong> <span id="certificateRepairDetail">not available</span></p>
+            <p><strong>Expert record:</strong> <span id="certificateRepairDetail">not available</span></p>
             <p><strong>Witness checks:</strong> <span id="certificateWitnesses">not available</span></p>
             <ul id="certificateLimitations"></ul>
-            <p class="audit-hash">Decision audit: <code id="certificateAudit">not available</code></p>
+            <p class="audit-hash">Replay provenance: <code id="certificateAudit">not available</code></p>
           </details>
         </section>
 
         <section class="intervention-section" aria-labelledby="interventionTitle">
           <div class="intervention-copy">
             <p class="step-kicker">Stage 3</p>
-            <h2 id="interventionTitle">Intervene and verify</h2>
-            <p>The established DenoiseAPT output initializes the session. Human edits are reversible and rechecked when certification is in scope.</p>
+            <h2 id="interventionTitle">Add expert knowledge</h2>
+            <p>Our Model initializes the session. Select an interval, choose how much observation to retain, and apply a reversible adaptation followed by a fresh A/B check.</p>
           </div>
           <div class="action-panel">
             <div class="action-buttons" role="group" aria-label="Intervention actions">
-              <button class="action-button accept" type="button" data-action="accept" disabled><strong>Use repair</strong><span>Generative candidate</span></button>
-              <button class="action-button protect" type="button" data-action="protect" disabled><strong>Protect</strong><span>Use observation</span></button>
-              <button class="action-button blend" type="button" data-action="blend" disabled><strong>Blend</strong><span>Mix both signals</span></button>
-              <button class="action-button automatic" type="button" data-action="restore_automatic" disabled><strong>Restore auto</strong><span>Frozen baseline</span></button>
+              <button class="action-button blend" type="button" data-action="blend" disabled><strong>Apply weight</strong><span>Adapt selected interval</span></button>
+              <button class="action-button automatic" type="button" data-action="restore_automatic" disabled><strong>Restore auto</strong><span>Original model output</span></button>
               <button class="action-button revert" type="button" data-action="revert" disabled><strong>Revert</strong><span>Undo last edit</span></button>
             </div>
             <div class="blend-control">
               <div class="range-heading">
                 <label for="blendWeight">Observation weight β</label>
-                <output id="blendValue" for="blendWeight">0.50</output>
+                <output id="blendValue" for="blendWeight">0.75</output>
               </div>
-              <input id="blendWeight" type="range" min="0" max="1" step="0.05" value="0.50" disabled>
-              <div class="range-labels"><span>Denoised</span><span>Observed</span></div>
+              <input id="blendWeight" type="range" min="0" max="1" step="0.05" value="0.75" disabled>
+              <div class="range-labels"><span>Automatic model</span><span>Observation</span></div>
+              <p class="field-note">Adapted output = β · observation + (1 − β) · automatic model, inside the selected interval only.</p>
+            </div>
+            <div class="adaptation-preview">
+              <div class="range-heading"><strong>Selected-interval preview</strong><span id="adaptationState">Automatic model</span></div>
+              <div class="preview-legend" aria-label="Adaptation preview legend">
+                <span><i class="automatic"></i>Automatic model</span>
+                <span><i class="observation"></i>Observation</span>
+                <span><i class="adapted"></i>Weighted preview</span>
+              </div>
+              <div class="canvas-wrap"><canvas id="adaptationCanvas" aria-label="Selected interval before and after expert adaptation"></canvas></div>
             </div>
           </div>
         </section>
@@ -254,20 +262,20 @@
         <section class="metrics-card" aria-labelledby="metricsTitle">
           <div class="card-heading">
             <div>
-              <h3 id="metricsTitle">Evaluation measures</h3>
-              <p>Reference-based measures appear only when a known reference is available.</p>
+              <h3 id="metricsTitle">Matched-window measures</h3>
+              <p>Condition-level observation-scale errors for the same held-out reference and corruption.</p>
             </div>
             <span id="metricScope" class="scope-pill">Evaluation scope</span>
           </div>
           <div class="table-scroll">
             <table>
               <thead>
-                <tr><th scope="col">Method</th><th scope="col">RMSE ↓</th><th scope="col">SNR Δ ↑</th><th scope="col" title="Lightweight demonstration approximation; not the official VUS-PR evaluator">VUS-PR approx. ↑</th><th scope="col">Event recall ↑</th><th scope="col">Erasure ↓</th><th scope="col">False event ↓</th><th scope="col" title="End-to-end learned analysis latency; not generator-only timing">Pipeline latency</th></tr>
+                <tr><th scope="col">Method</th><th scope="col">Overall OS-NRMSE ↓</th><th scope="col">Anomaly OS-NRMSE ↓</th></tr>
               </thead>
               <tbody id="metricsBody"></tbody>
             </table>
           </div>
-          <p class="metric-note"><strong>Evaluation note:</strong> this interface reports a lightweight VUS-PR approximation for interactive feedback. Publication tables must be produced with the official evaluator.</p>
+          <p class="metric-note"><strong>Scope:</strong> this is one illustrative held-out condition selected for the demonstration. Aggregate comparisons remain those in the sealed benchmark artifacts.</p>
         </section>
       </div>
     </div>
@@ -277,7 +285,7 @@
 
   <footer>
     <p>DenoiseAPT research demonstration · Local processing service</p>
-    <p>Certificates are limited to configured witnesses, frozen thresholds, and recorded normalization.</p>
+    <p>Evidence status is limited to configured witnesses, frozen thresholds, and recorded normalization.</p>
   </footer>
 
   <template id="plotTemplate">

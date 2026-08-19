@@ -58,6 +58,38 @@ def test_catalog_preserves_synthetic_and_benchmark_metadata():
         assert benchmark["benchmark_case"] is True
 
 
+def test_excluded_heldout_replay_is_optional_for_health_and_catalog():
+    replay = ROOT / "data" / "prepared" / "tsb_ad_cats_heldout_replay.npz"
+    assert not replay.exists()
+    service = DemoService(ROOT)
+    assert service.health()["heldout_replay_ready"] is False
+    catalog = service.list_cases()
+    assert "tsb_ad_cats_heldout_replay" not in {
+        case["id"] for case in catalog["cases"]
+    }
+    assert not any(
+        warning["case_id"] == "tsb_ad_cats_heldout_replay"
+        for warning in catalog["warnings"]
+    )
+
+
+def test_csv_upload_remains_review_only_without_heldout_replay():
+    values = np.sin(np.linspace(0.0, 12.0, 128)).tolist()
+    response = DemoService(ROOT).analyze(
+        {
+            "upload": {"name": "unseen.csv", "values": values},
+            "corruption": {"family": "none", "severity": 0.0, "seed": 17},
+            "window": {"start": 0, "length": 128},
+        }
+    )
+    assert response["meta"]["case_id"] == "upload"
+    assert response["meta"]["review_only"] is True
+    assert response["automatic_control"]["mode"] == "review_only"
+    assert response["automatic_control"]["certification_eligible"] is False
+    assert response["automatic_control"]["certificate"]["status"] == "unverified"
+    assert response["hybrid_control"]["mode"] == "review_only"
+
+
 def test_analyze_rejects_ambiguous_source_and_bad_timestamp_length():
     service = DemoService(ROOT)
     values = np.sin(np.linspace(0, 8, 64)).tolist()
