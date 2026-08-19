@@ -1,0 +1,61 @@
+{
+  "controller": {
+    "artifact_sha256": "5aa8bb21ce8493f1a54e67fa9a6eb50cf282307e39499137faf0ef02d771f892",
+    "confirmation_results_packaged": false,
+    "controller_config_sha256": "ebfd2d2c0d2a5d298e6319dcd6c9f12487c341ad72a7e2e66d9dfd94c7b24ae3",
+    "development_only": true
+  },
+  "detector_state_sha256": {
+    "A_causal_mlp": "9e87683ae13c6692f6aa7350a51a01d51ebed0a5b4d24d2af9e38904d67bf9d2",
+    "B_causal_conv": "a3eaeb87c7135ff655509b9c569ee867ec68acf2500089cc99d7ac9bc27ca4da"
+  },
+  "files": {
+    "controller": {
+      "path": "frozen_controller_config.json",
+      "sha256": "6730eb546ddace1a4962c2a036f4a3fb53c840575dfd1d2bf1b137325eaeabb6"
+    },
+    "detectors": {
+      "path": "seed17_detectors_A_B.pt",
+      "sha256": "a2f7377978fb5a15f6863f08e3341fd08d36a5f3c248851ec953c413a123c11c"
+    },
+    "ordinary_generator": {
+      "path": "seed17_ordinary_cgan.pt",
+      "sha256": "e01c1a20386d145ab42240142dc7dc0280e745a60c8968bbdcb1800a1ebb70d7"
+    },
+    "soft_generator": {
+      "path": "seed17_denoiseapt_soft.pt",
+      "sha256": "5d2625326339d41e4145f6c8ef07fb90cdc5909b6a68ec2c997d78abed96ae6f"
+    }
+  },
+  "prepared_case": {
+    "case_id": "tsb_ad_ucr_medical_guided",
+    "distribution": "download-prepared optional benchmark input; not bundled in the release ZIP",
+    "path": "data/prepared/tsb_ad_ucr_medical_guided.npz",
+    "sha256": "77eccc53416eab9df05992a618a52d75d7edea763350f1b81c06c35ba6753d07"
+  },
+  "prepared_case_bundled": false,
+  "schema_version": 1,
+  "seed": 17,
+  "selected_model": "denoiseapt_lambda_0p25",
+  "selection_source": "protocol-v1 validation_selection; detector A event-evidence distortion with RMSE non-inferiority",
+  "source_protocol_manifest_sha256": "92efe50ed865bf9e0f44f84312e392be757152d11ab6de4b6b1ca72d7c209d0e",
+  "source_validation_selection_sha256": "6af34b4fc630a228f6e75135c8c5cb1b83941804e89ab0a40a9297dd7900c0d1",
+  "threshold_scope": {
+    "calibration_domain": "TSB-AD-U UCR Medical",
+    "calibration_split": "protocol-v1 validation",
+    "eligible_case_ids": [
+      "tsb_ad_ucr_medical_guided"
+    ],
+    "eligible_source_files": [
+      "TSB-AD-U/442_UCR_id_140_Medical_tr_1875_1st_4187.csv"
+    ],
+    "normalization": "per-window observation median and max(IQR/1.349, standard deviation, 1e-4)",
+    "scope_note": "Witness-bound A/B threshold provenance only; not physical anomaly truth or unseen-domain validity.",
+    "threshold_source": "protocol-v1 clean validation reference normal timestamps",
+    "window_length": 512
+  },
+  "thresholds": {
+    "A_causal_mlp": 8.951773643493652,
+    "B_causal_conv": 9.352407455444336
+  }
+}

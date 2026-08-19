@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "protocol_id": "denoiseapt-external-denoiser-benchmark-retrospective-v1",
+  "runtime": {
+    "python": "3.12.13",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "torch": "2.13.0+cpu"
+  },
+  "external_methods": {
+    "wavelet_shrinkage": {
+      "package": "PyWavelets",
+      "version": "1.8.0",
+      "repository": "https://github.com/PyWavelets/pywt",
+      "license": "MIT",
+      "foundation_doi": "10.1109/18.382009",
+      "scope_note": "The cited paper establishes soft thresholding; the benchmark development grid may select soft or hard thresholding."
+    },
+    "noisereduce": {
+      "package": "noisereduce",
+      "version": "3.0.3",
+      "repository": "https://github.com/timsainb/noisereduce",
+      "license": "MIT",
+      "paper_doi": "10.1038/s41598-025-13108-x"
+    },
+    "rins_t": {
+      "repository": "https://github.com/EPFL-IMOS/RINS-T",
+      "commit": "95d1d9b44b44ba771b2400f5fb68fe42447c5fa2",
+      "license": null,
+      "license_status": "No software license was found in the repository at the pinned commit.",
+      "paper_doi": "10.1109/TIM.2025.3632427",
+      "implementation_role": "Official architecture and demo recipe adapted to the benchmark's observation-only input wrapper and fixed optimization loop."
+    }
+  }
+}

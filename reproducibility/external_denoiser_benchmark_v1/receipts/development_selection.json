@@ -1,0 +1,289 @@
+{
+  "development_path_sha256": "c4519cf876a9ec3cf380624aaffe47ab2682671be7f6475de7703a54fc4f9cff",
+  "labels_used": false,
+  "noisereduce_grid": [
+    {
+      "config_id": "noisereduce_stationary_p0.50_n32",
+      "elapsed_seconds": 21.119955700007267,
+      "n_fft": 32,
+      "prop_decrease": 0.5,
+      "stationary": true,
+      "validation_os_nrmse": 0.36891446973785363
+    },
+    {
+      "config_id": "noisereduce_stationary_p0.50_n64",
+      "elapsed_seconds": 13.828313699981663,
+      "n_fft": 64,
+      "prop_decrease": 0.5,
+      "stationary": true,
+      "validation_os_nrmse": 0.38871183669792286
+    },
+    {
+      "config_id": "noisereduce_stationary_p0.75_n32",
+      "elapsed_seconds": 21.83308000001125,
+      "n_fft": 32,
+      "prop_decrease": 0.75,
+      "stationary": true,
+      "validation_os_nrmse": 0.5201263772369932
+    },
+    {
+      "config_id": "noisereduce_stationary_p0.75_n64",
+      "elapsed_seconds": 13.956991199986078,
+      "n_fft": 64,
+      "prop_decrease": 0.75,
+      "stationary": true,
+      "validation_os_nrmse": 0.5518578638008954
+    },
+    {
+      "config_id": "noisereduce_stationary_p1.00_n32",
+      "elapsed_seconds": 21.312206899980083,
+      "n_fft": 32,
+      "prop_decrease": 1.0,
+      "stationary": true,
+      "validation_os_nrmse": 0.6839883970266194
+    },
+    {
+      "config_id": "noisereduce_stationary_p1.00_n64",
+      "elapsed_seconds": 13.018353699997533,
+      "n_fft": 64,
+      "prop_decrease": 1.0,
+      "stationary": true,
+      "validation_os_nrmse": 0.7270116003950092
+    },
+    {
+      "config_id": "noisereduce_nonstationary_p0.50_n32",
+      "elapsed_seconds": 22.01428509998368,
+      "n_fft": 32,
+      "prop_decrease": 0.5,
+      "stationary": false,
+      "validation_os_nrmse": 0.3997108492547579
+    },
+    {
+      "config_id": "noisereduce_nonstationary_p0.50_n64",
+      "elapsed_seconds": 14.424004599975888,
+      "n_fft": 64,
+      "prop_decrease": 0.5,
+      "stationary": false,
+      "validation_os_nrmse": 0.4440095717210457
+    },
+    {
+      "config_id": "noisereduce_nonstationary_p0.75_n32",
+      "elapsed_seconds": 21.71990680001909,
+      "n_fft": 32,
+      "prop_decrease": 0.75,
+      "stationary": false,
+      "validation_os_nrmse": 0.5697526335931229
+    },
+    {
+      "config_id": "noisereduce_nonstationary_p0.75_n64",
+      "elapsed_seconds": 13.796437899989542,
+      "n_fft": 64,
+      "prop_decrease": 0.75,
+      "stationary": false,
+      "validation_os_nrmse": 0.6426721963110416
+    },
+    {
+      "config_id": "noisereduce_nonstationary_p1.00_n32",
+      "elapsed_seconds": 22.19247940002242,
+      "n_fft": 32,
+      "prop_decrease": 1.0,
+      "stationary": false,
+      "validation_os_nrmse": 0.751750809621353
+    },
+    {
+      "config_id": "noisereduce_nonstationary_p1.00_n64",
+      "elapsed_seconds": 14.577625999983866,
+      "n_fft": 64,
+      "prop_decrease": 1.0,
+      "stationary": false,
+      "validation_os_nrmse": 0.8520375942813275
+    }
+  ],
+  "package_identity": {
+    "noisereduce_distribution": "3.0.3",
+    "noisereduce_tree_sha256": "97c10188589a805e9580fa8f048b18c8be0cf05759312b10d88c3e1ce8c371ed",
+    "numpy": "2.5.2",
+    "python": "3.12.13",
+    "pywavelets_distribution": "1.8.0",
+    "pywt_runtime": "1.8.0",
+    "pywt_tree_sha256": "519d4faf7b0dec773ca3ed9431366d0e1d69d2dfbeb43cc068f4d839277c699c",
+    "scipy": "1.18.0"
+  },
+  "protocol_id": "denoiseapt-external-denoiser-benchmark-retrospective-v1",
+  "schema_version": 1,
+  "selected_noisereduce": {
+    "config_id": "noisereduce_stationary_p0.50_n32",
+    "elapsed_seconds": 21.119955700007267,
+    "n_fft": 32,
+    "prop_decrease": 0.5,
+    "stationary": true,
+    "validation_os_nrmse": 0.36891446973785363
+  },
+  "selected_validation_windows": 61,
+  "selected_wavelet": {
+    "config_id": "wavelet_sym4_hard_0.50",
+    "elapsed_seconds": 0.1361019999603741,
+    "threshold_mode": "hard",
+    "threshold_multiplier": 0.5,
+    "validation_os_nrmse": 0.24502545766754028,
+    "wavelet": "sym4"
+  },
+  "selection_metric": "equal-source-group mean all-sample OS-NRMSE",
+  "selection_sha256": "f9029afa2f067e677bd3f2852eb1fda819e67efcd1ca5fe85861fdf83deb496f",
+  "source_groups": 61,
+  "status": "DEVELOPMENT_SELECTION_COMPLETE_TEST_OUTPUTS_NOT_GENERATED",
+  "tuning_config_sha256": "58581aa58b4ee9fe3c7a91d227215f7d3186f9b56f1e82c07804de4842ed6182",
+  "tuning_dependency_sha256": {
+    "data/experiment/quality_v4_development_v2_LOCK.json": "56e925592b81d2811c1640806403cb6b09395839af16fdf866d893c5ad126b3f",
+    "data/experiment/quality_v4_development_v2_manifest.json": "0c7f8657591ad37fc631ed689543b0a37863094d2222f707f8bdd7fe7661f27b",
+    "denoiseapt/corruptions.py": "7b10edd48f8e5dd0d590dc8d678a4b54c257dd25d7393ddd3c8c31dcbe2b0d7b"
+  },
+  "tuning_runner_sha256": "fd98c7734fbb4d74606ac13d7eca9dbe1089acea09eedaa63c1b173a828efad3",
+  "validation_conditions": 732,
+  "wavelet_grid": [
+    {
+      "config_id": "wavelet_db2_soft_0.50",
+      "elapsed_seconds": 0.16461659997003153,
+      "threshold_mode": "soft",
+      "threshold_multiplier": 0.5,
+      "validation_os_nrmse": 0.25796712423977686,
+      "wavelet": "db2"
+    },
+    {
+      "config_id": "wavelet_db2_soft_1.00",
+      "elapsed_seconds": 0.1359789000125602,
+      "threshold_mode": "soft",
+      "threshold_multiplier": 1.0,
+      "validation_os_nrmse": 0.29504739956696985,
+      "wavelet": "db2"
+    },
+    {
+      "config_id": "wavelet_db2_soft_1.50",
+      "elapsed_seconds": 0.1349051000433974,
+      "threshold_mode": "soft",
+      "threshold_multiplier": 1.5,
+      "validation_os_nrmse": 0.3246188222073405,
+      "wavelet": "db2"
+    },
+    {
+      "config_id": "wavelet_db2_hard_0.50",
+      "elapsed_seconds": 0.13004120002733544,
+      "threshold_mode": "hard",
+      "threshold_multiplier": 0.5,
+      "validation_os_nrmse": 0.24921575481906405,
+      "wavelet": "db2"
+    },
+    {
+      "config_id": "wavelet_db2_hard_1.00",
+      "elapsed_seconds": 0.12430130003485829,
+      "threshold_mode": "hard",
+      "threshold_multiplier": 1.0,
+      "validation_os_nrmse": 0.27793873843520067,
+      "wavelet": "db2"
+    },
+    {
+      "config_id": "wavelet_db2_hard_1.50",
+      "elapsed_seconds": 0.1790472999564372,
+      "threshold_mode": "hard",
+      "threshold_multiplier": 1.5,
+      "validation_os_nrmse": 0.2953812392025872,
+      "wavelet": "db2"
+    },
+    {
+      "config_id": "wavelet_db4_soft_0.50",
+      "elapsed_seconds": 0.14343940000981092,
+      "threshold_mode": "soft",
+      "threshold_multiplier": 0.5,
+      "validation_os_nrmse": 0.2513675250019382,
+      "wavelet": "db4"
+    },
+    {
+      "config_id": "wavelet_db4_soft_1.00",
+      "elapsed_seconds": 0.1478726999484934,
+      "threshold_mode": "soft",
+      "threshold_multiplier": 1.0,
+      "validation_os_nrmse": 0.2876038924025333,
+      "wavelet": "db4"
+    },
+    {
+      "config_id": "wavelet_db4_soft_1.50",
+      "elapsed_seconds": 0.14800129999639466,
+      "threshold_mode": "soft",
+      "threshold_multiplier": 1.5,
+      "validation_os_nrmse": 0.315930573079014,
+      "wavelet": "db4"
+    },
+    {
+      "config_id": "wavelet_db4_hard_0.50",
+      "elapsed_seconds": 0.13172950001899153,
+      "threshold_mode": "hard",
+      "threshold_multiplier": 0.5,
+      "validation_os_nrmse": 0.24589315654409183,
+      "wavelet": "db4"
+    },
+    {
+      "config_id": "wavelet_db4_hard_1.00",
+      "elapsed_seconds": 0.1270065000280738,
+      "threshold_mode": "hard",
+      "threshold_multiplier": 1.0,
+      "validation_os_nrmse": 0.2715009161953583,
+      "wavelet": "db4"
+    },
+    {
+      "config_id": "wavelet_db4_hard_1.50",
+      "elapsed_seconds": 0.12839720002375543,
+      "threshold_mode": "hard",
+      "threshold_multiplier": 1.5,
+      "validation_os_nrmse": 0.29023799534586675,
+      "wavelet": "db4"
+    },
+    {
+      "config_id": "wavelet_sym4_soft_0.50",
+      "elapsed_seconds": 0.15213860000949353,
+      "threshold_mode": "soft",
+      "threshold_multiplier": 0.5,
+      "validation_os_nrmse": 0.25112730264787186,
+      "wavelet": "sym4"
+    },
+    {
+      "config_id": "wavelet_sym4_soft_1.00",
+      "elapsed_seconds": 0.15813920000800863,
+      "threshold_mode": "soft",
+      "threshold_multiplier": 1.0,
+      "validation_os_nrmse": 0.28651550959541955,
+      "wavelet": "sym4"
+    },
+    {
+      "config_id": "wavelet_sym4_soft_1.50",
+      "elapsed_seconds": 0.15307649999158457,
+      "threshold_mode": "soft",
+      "threshold_multiplier": 1.5,
+      "validation_os_nrmse": 0.31366964676091375,
+      "wavelet": "sym4"
+    },
+    {
+      "config_id": "wavelet_sym4_hard_0.50",
+      "elapsed_seconds": 0.1361019999603741,
+      "threshold_mode": "hard",
+      "threshold_multiplier": 0.5,
+      "validation_os_nrmse": 0.24502545766754028,
+      "wavelet": "sym4"
+    },
+    {
+      "config_id": "wavelet_sym4_hard_1.00",
+      "elapsed_seconds": 0.137305699987337,
+      "threshold_mode": "hard",
+      "threshold_multiplier": 1.0,
+      "validation_os_nrmse": 0.27253036802929054,
+      "wavelet": "sym4"
+    },
+    {
+      "config_id": "wavelet_sym4_hard_1.50",
+      "elapsed_seconds": 0.13971670001046732,
+      "threshold_mode": "hard",
+      "threshold_multiplier": 1.5,
+      "validation_os_nrmse": 0.29045987055702394,
+      "wavelet": "sym4"
+    }
+  ]
+}

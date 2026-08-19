@@ -1,0 +1,30 @@
+{
+  "seed": 17,
+  "window_length": 512,
+  "guided_case": {
+    "archive_member": "TSB-AD-U/442_UCR_id_140_Medical_tr_1875_1st_4187.csv",
+    "source_start": 3936,
+    "source_end": 4448,
+    "label_start": 4187,
+    "label_end": 4199
+  },
+  "corruption": {
+    "family": "impulse",
+    "severity": 0.35,
+    "seed": 17
+  },
+  "inference": {
+    "mode": "deterministic_one_pass",
+    "passes": 1,
+    "concern_weights": {
+      "score_change": 0.625,
+      "morphology": 0.375,
+      "disagreement": 0.0
+    }
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8765,
+    "max_request_bytes": 16777216
+  }
+}

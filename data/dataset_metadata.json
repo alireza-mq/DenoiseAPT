@@ -1,0 +1,26 @@
+{
+  "dataset": "TSB-AD-U",
+  "archive_url": "https://www.thedatum.org/datasets/TSB-AD-U.zip",
+  "archive_bytes": 72900868,
+  "archive_sha256": "0c47020d3423723c70773736dbd800369f2b487328becbf339450d1ae5020961",
+  "archive_last_modified_observed": "2026-05-10",
+  "archive_verified_on": "2026-08-13",
+  "project_url": "https://github.com/TheDatumOrg/TSB-AD",
+  "per_dataset_license_url": "https://thedatumorg.github.io/TSB-AD/#summary-of-datasets",
+  "guided_case": {
+    "archive_member": "TSB-AD-U/442_UCR_id_140_Medical_tr_1875_1st_4187.csv",
+    "domain": "Medical",
+    "upstream_collection": "UCR",
+    "samples": 7501,
+    "labelled_interval_half_open": [4187, 4199],
+    "default_window_samples": 512
+  },
+  "license_notice": "TSB-AD preprocessing and curation are Apache-2.0; contained datasets retain upstream terms. The project page lists no license for UCR. Do not assume redistribution permission.",
+  "citation": "Qinghua Liu and John Paparrizos. The Elephant in the Room: Towards A Reliable Time-Series Anomaly Detection Benchmark. NeurIPS 2024 Datasets and Benchmarks Track.",
+  "offline_fixture": {
+    "name": "synthetic_low_amplitude_event",
+    "origin": "generated deterministically by this package",
+    "benchmark_use": false
+  }
+}
+

@@ -1,0 +1,61 @@
+{
+  "canonical_artifacts_mutated_after_legacy_commit": false,
+  "canonical_summary_self_hash": "c024b65b860e7e446a3f46f008b032cabc30205d35a151968fbc4ad414e96f76",
+  "frozen_v1_execution_identity_sha256": "43e2c01c47e422a2632b7a5d43d1c0fca69ce25f12945d5d82ddc2d6e84d3cbc",
+  "legacy_audit_result": {
+    "artifacts": {
+      "benchmark_outputs.npz": {
+        "bytes": 25146384,
+        "sha256": "d599f15d6162213d570c5e917030adb59c65fa54a59e56a1738d15a98a2bf938"
+      },
+      "waveform_rows.csv": {
+        "bytes": 7690775,
+        "sha256": "202a9e623037d04ecda38f78704f4180bcf548ff1dea5acf1cf1794df27d84ff"
+      },
+      "witness_rows.csv": {
+        "bytes": 14019464,
+        "sha256": "524b6f67e43f632143c67345f55c9d02894ee4d886e0df5ffbd1bb74560f4935"
+      }
+    },
+    "execution_identity_sha256": "43e2c01c47e422a2632b7a5d43d1c0fca69ce25f12945d5d82ddc2d6e84d3cbc",
+    "status": "AUDIT_PASS",
+    "summary_sha256": "c024b65b860e7e446a3f46f008b032cabc30205d35a151968fbc4ad414e96f76"
+  },
+  "parity_patch": {
+    "audit_call_count": 1,
+    "evaluate_call_count": 1,
+    "original_function_restored": true
+  },
+  "protocol_id": "denoiseapt-external-denoiser-benchmark-retrospective-v1",
+  "records": {
+    "benchmark_outputs": {
+      "bytes": 25146384,
+      "path": "runs/external_denoiser_benchmark_v1/artifacts/benchmark_outputs.npz",
+      "sha256": "d599f15d6162213d570c5e917030adb59c65fa54a59e56a1738d15a98a2bf938"
+    },
+    "canonical_summary": {
+      "bytes": 6798,
+      "path": "runs/external_denoiser_benchmark_v1/artifacts/benchmark_summary.json",
+      "sha256": "2bd6aa2d437e8508f3e7a72184175188643da03f70f829fecd31b94c44116f98"
+    },
+    "recovery_authorization": {
+      "bytes": 4420,
+      "path": "runs/external_denoiser_benchmark_v1/AFTER_FAILED_V1_EXECUTION.json",
+      "sha256": "77c3ce0d46c4becd40539008b44a6aae78323d12a52e74bd82e31bce25ce203f"
+    },
+    "waveform_rows": {
+      "bytes": 7690775,
+      "path": "runs/external_denoiser_benchmark_v1/artifacts/waveform_rows.csv",
+      "sha256": "202a9e623037d04ecda38f78704f4180bcf548ff1dea5acf1cf1794df27d84ff"
+    },
+    "witness_rows": {
+      "bytes": 14019464,
+      "path": "runs/external_denoiser_benchmark_v1/artifacts/witness_rows.csv",
+      "sha256": "524b6f67e43f632143c67345f55c9d02894ee4d886e0df5ffbd1bb74560f4935"
+    }
+  },
+  "recovery_audit_identity_sha256": "c9fc066584b4da726552196d86d27cba7aaac783523bd1bb25a1e5fc40f729a2",
+  "recovery_identity_sha256": "828685bb899486ec51a72c7924dba150621ef910723373c76741e385663e171a",
+  "schema_version": 1,
+  "status": "RECOVERED_EVALUATION_AND_AUDIT_COMPLETE"
+}

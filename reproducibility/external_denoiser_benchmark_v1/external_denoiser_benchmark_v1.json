@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "protocol_id": "denoiseapt-external-denoiser-benchmark-retrospective-v1",
+  "status": "DEVELOPMENT_TUNING_ONLY_BEFORE_EXTERNAL_TEST_OUTPUTS",
+  "purpose": "Matched-data benchmark of DenoiseAPT against independently motivated time-series denoisers.",
+  "scientific_scope": {
+    "retrospective": true,
+    "panel_opened_before_comparator_roster_was_selected": true,
+    "confirmation_claim_eligible": false,
+    "state_of_the_art_claim_eligible": false,
+    "published_scores_copied_into_table": false,
+    "comparisons_are_descriptive": true
+  },
+  "methods": [
+    "corrupted_input",
+    "median_filter_w3",
+    "wavelet_shrinkage",
+    "noisereduce",
+    "rins_t",
+    "denoiseapt"
+  ],
+  "method_sources": {
+    "wavelet_shrinkage": {
+      "foundation_doi": "10.1109/18.382009",
+      "foundation_scope": "foundational soft-thresholding paper; the benchmark selects soft or hard thresholding on development data",
+      "software_repository": "https://github.com/PyWavelets/pywt",
+      "software_license": "MIT",
+      "software_version": "1.8.0"
+    },
+    "noisereduce": {
+      "paper_doi": "10.1038/s41598-025-13108-x",
+      "software_repository": "https://github.com/timsainb/noisereduce",
+      "software_license": "MIT",
+      "software_version": "3.0.3"
+    },
+    "rins_t": {
+      "paper_doi": "10.1109/TIM.2025.3632427",
+      "software_repository": "https://github.com/EPFL-IMOS/RINS-T",
+      "software_license": null,
+      "license_status": "no software license found at the pinned commit"
+    }
+  },
+  "development": {
+    "path": "data/experiment/quality_v4_development_v2.npz",
+    "partition": "validation",
+    "window_selection": "minimum_sha256_per_source_group",
+    "selection_namespace": "external-denoiser-benchmark-validation-window-v1",
+    "corruption_namespace": "external-denoiser-benchmark-validation-corruption-v1",
+    "families": ["gaussian", "impulse", "drift", "mixed"],
+    "severities": [0.25, 0.5, 0.75],
+    "replicates": [0],
+    "selection_metric": "equal-source-group mean all-sample OS-NRMSE",
+    "labels_used_for_selection": false
+  },
+  "wavelet_grid": {
+    "package": "PyWavelets",
+    "package_version": "1.8.0",
+    "wavelets": ["db2", "db4", "sym4"],
+    "threshold_modes": ["soft", "hard"],
+    "threshold_multipliers": [0.5, 1.0, 1.5],
+    "level": 4,
+    "boundary_mode": "symmetric",
+    "noise_scale": "MAD of finest detail divided by 0.6744897501960817",
+    "base_threshold": "sigma*sqrt(2*log(512))"
+  },
+  "noisereduce_grid": {
+    "package_version": "3.0.3",
+    "input_preprocessing": "per-window median/robust-scale normalization, restored to original units",
+    "stationary": [true, false],
+    "prop_decrease": [0.5, 0.75, 1.0],
+    "n_fft": [32, 64],
+    "normalized_sample_rate": 512,
+    "sample_rate_semantics": "algorithmic index rate for a normalized 512-sample window; not a measured physical sampling frequency",
+    "nonstationary_time_constant_samples": 64,
+    "frequency_mask_smoothing": null,
+    "time_mask_smoothing": null
+  },
+  "rins_t": {
+    "official_repository": "https://github.com/EPFL-IMOS/RINS-T",
+    "repository_commit": "95d1d9b44b44ba771b2400f5fb68fe42447c5fa2",
+    "software_license_present": false,
+    "redistribution_allowed_by_this_benchmark": false,
+    "implementation_role": "internal official-architecture/demo-recipe adaptation",
+    "normalization": "per-window min-max to [0,1]",
+    "guided_input": "Gaussian filter sigma 4 samples",
+    "iterations": 27,
+    "optimizer": "Adam",
+    "learning_rate": 0.01,
+    "loss": "Huber",
+    "huber_delta": 0.001,
+    "input_noise_std": 0.03,
+    "output_ema_alpha": 0.5,
+    "seed_per_condition": 42,
+    "workers": 4
+  },
+  "evaluation": {
+    "source": "runs/hybrid_v2_confirmation_fresh_v1/units/seed_17/{domain}/audit_trace.npz",
+    "domains": ["sensor", "medical"],
+    "conditions": 2700,
+    "corrupted_conditions": 2592,
+    "source_groups": 32,
+    "windows": 108,
+    "configured_scorers": ["A_causal_mlp", "B_causal_conv"],
+    "thresholds": "runs/hybrid_v2_confirmation_fresh_v1/artifacts/calibration_thresholds.json",
+    "denoiseapt_trace_method": "output__hybrid_v2",
+    "reconstruction_aggregation": "condition mean within source group, equal source groups within domain, equal domains",
+    "overall_endpoint": "OS-NRMSE on corrupted conditions",
+    "anomaly_endpoint": "OS-NRMSE on labelled samples in corrupted event-window conditions",
+    "evidence_retention": "pooled observation-detectable labelled event-condition opportunities retained under configured scorers A/B",
+    "new_evidence": "pooled output-only intervals under configured scorers A/B with eight-sample matching tolerance"
+  },
+  "output": "runs/external_denoiser_benchmark_v1"
+}

@@ -1,0 +1,104 @@
+{
+  "canonical_outputs_absent_at_seal": true,
+  "development_selection_sha256": "f9029afa2f067e677bd3f2852eb1fda819e67efcd1ca5fe85861fdf83deb496f",
+  "failed_v1_execution": {
+    "all_method_outputs_computed_in_memory": true,
+    "canonical_artifacts_committed": false,
+    "command": "python experiments/run_external_denoiser_benchmark_v1.py --evaluate",
+    "diagnostic_scope_after_failure": "median-filter parity values only; no Wavelet, Noisereduce, or RINS-T endpoint was inspected",
+    "failure": "BenchmarkError: existing metric parity failed: median_filter_w3/overall_os_nrmse",
+    "failure_location": "_assert_existing_row_parity before artifact staging",
+    "narrative_basis": "operator-observed exception plus filesystem and frozen code-order verification; no execution log file was emitted",
+    "staging_artifacts_present": false
+  },
+  "frozen_v1_execution_identity_sha256": "43e2c01c47e422a2632b7a5d43d1c0fca69ce25f12945d5d82ddc2d6e84d3cbc",
+  "median_diagnostic": {
+    "absolute_delta": {
+      "anomaly_region_os_nrmse": 1.054666437516616e-09,
+      "overall_os_nrmse": 5.657801727121381e-10
+    },
+    "by_domain": {
+      "medical": {
+        "anomaly_region_os_nrmse": 0.11781869812830276,
+        "overall_os_nrmse": 0.12274575534589992
+      },
+      "sensor": {
+        "anomaly_region_os_nrmse": 0.26214104704918423,
+        "overall_os_nrmse": 0.1869123536642939
+      }
+    },
+    "frozen_v1_expected": {
+      "anomaly_region_os_nrmse": 0.18997987364340993,
+      "overall_os_nrmse": 0.15482905507087708
+    },
+    "observed": {
+      "anomaly_region_os_nrmse": 0.1899798725887435,
+      "overall_os_nrmse": 0.1548290545050969
+    }
+  },
+  "numeric_algorithms_changed": false,
+  "permitted_recovery": {
+    "all_other_float_abs_tolerance": 1e-12,
+    "changed_check": "median_filter_w3 float parity absolute tolerance only",
+    "integer_counts_remain_exact": true,
+    "median_abs_tolerance": 2e-09,
+    "methods_parameters_outputs_metrics_aggregation_unchanged": true
+  },
+  "post_panel_access": true,
+  "protocol_id": "denoiseapt-external-denoiser-benchmark-retrospective-v1",
+  "records": {
+    "frozen_v1_config": {
+      "bytes": 4755,
+      "path": "experiments/external_denoiser_benchmark_v1.json",
+      "sha256": "58581aa58b4ee9fe3c7a91d227215f7d3186f9b56f1e82c07804de4842ed6182"
+    },
+    "frozen_v1_prefreeze": {
+      "bytes": 7111,
+      "path": "runs/external_denoiser_benchmark_v1/PREFREEZE.json",
+      "sha256": "41c24cd5e49c4e71b40bb3c00778ddee422007e8d0fbb9ea9dc404c2eb44cd84"
+    },
+    "frozen_v1_runner": {
+      "bytes": 65160,
+      "path": "experiments/run_external_denoiser_benchmark_v1.py",
+      "sha256": "fd98c7734fbb4d74606ac13d7eca9dbe1089acea09eedaa63c1b173a828efad3"
+    },
+    "frozen_v1_selection": {
+      "bytes": 9565,
+      "path": "runs/external_denoiser_benchmark_v1/development_selection.json",
+      "sha256": "335f6875e2c660438bf0c45c05cacee3baf293f335c961e8a53683155f8bb64e"
+    },
+    "recovery_note": {
+      "bytes": 1344,
+      "path": "experiments/EXTERNAL_DENOISER_BENCHMARK_V1_RECOVERY.md",
+      "sha256": "c9d9d6edc619d7fa50f755309d3f0e190eb4246ee72ef94fcb2c984dcfd40d27"
+    },
+    "recovery_tests": {
+      "bytes": 4460,
+      "path": "tests/test_external_denoiser_benchmark_v1_recovery.py",
+      "sha256": "f551fa56ee5c3defab170fa16b46914efba585ec003854c15f34e6fc962168d3"
+    },
+    "recovery_wrapper": {
+      "bytes": 18065,
+      "path": "experiments/run_external_denoiser_benchmark_v1_recovery.py",
+      "sha256": "cacb367297af28d1a035a220743d525bc6958325a525c59e10634f84888a04a1"
+    }
+  },
+  "recovery_identity_sha256": "828685bb899486ec51a72c7924dba150621ef910723373c76741e385663e171a",
+  "runtime_identity": {
+    "cpu_count": 16,
+    "packages": {
+      "noisereduce_distribution": "3.0.3",
+      "noisereduce_tree_sha256": "97c10188589a805e9580fa8f048b18c8be0cf05759312b10d88c3e1ce8c371ed",
+      "numpy": "2.5.2",
+      "python": "3.12.13",
+      "pywavelets_distribution": "1.8.0",
+      "pywt_runtime": "1.8.0",
+      "pywt_tree_sha256": "519d4faf7b0dec773ca3ed9431366d0e1d69d2dfbeb43cc068f4d839277c699c",
+      "scipy": "1.18.0"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "torch": "2.13.0+cpu"
+  },
+  "schema_version": 1,
+  "status": "FAILED_PRECOMMIT_NUMERICAL_SENTINEL_RECOVERY_AUTHORIZED"
+}

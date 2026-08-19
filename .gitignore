@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+/dist/
+/tmp/
+data/raw/
+data/cache/
+data/TSB-AD-U/
+data/prepared/tsb_ad_ucr_medical_guided.npz
+data/experiment/*.npz
+# Internal derived SMD/Exathlon windows; rebuild locally under upstream terms.
+data/experiment/protocol_v2_confirmation.npz
+runs/
+sessions/
+*.log
+.DS_Store
+Thumbs.db

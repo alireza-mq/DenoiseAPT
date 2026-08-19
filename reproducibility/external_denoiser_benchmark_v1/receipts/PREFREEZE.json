@@ -1,0 +1,176 @@
+{
+  "canonical_outputs_absent": true,
+  "execution_identity_sha256": "43e2c01c47e422a2632b7a5d43d1c0fca69ce25f12945d5d82ddc2d6e84d3cbc",
+  "protocol_id": "denoiseapt-external-denoiser-benchmark-retrospective-v1",
+  "records": {
+    "automatic_runtime_source": {
+      "bytes": 42149,
+      "path": "denoiseapt/automatic_runtime.py",
+      "sha256": "6bc9093ad7b19443733853135ef71502aa61b08788234ead54c1abb2497eb8d4"
+    },
+    "canonical_waveform_rows": {
+      "bytes": 6176030,
+      "path": "runs/hybrid_v2_confirmation_fresh_v1/artifacts/waveform_rows.csv",
+      "sha256": "b9e29386fa595f0b661b450e4f9a78ac863c688ebe66ed16a06edb863e30d158"
+    },
+    "config": {
+      "bytes": 4755,
+      "path": "experiments/external_denoiser_benchmark_v1.json",
+      "sha256": "58581aa58b4ee9fe3c7a91d227215f7d3186f9b56f1e82c07804de4842ed6182"
+    },
+    "confirmation_evaluation_source": {
+      "bytes": 23752,
+      "path": "denoiseapt/confirmation_evaluation.py",
+      "sha256": "facbcc87fdf8dcbd1c5247caf0374c2bdbb67cf12dc64a66dda2ad77b2915321"
+    },
+    "corruptions_source": {
+      "bytes": 6133,
+      "path": "denoiseapt/corruptions.py",
+      "sha256": "7b10edd48f8e5dd0d590dc8d678a4b54c257dd25d7393ddd3c8c31dcbe2b0d7b"
+    },
+    "dependency_manifest": {
+      "bytes": 1288,
+      "path": "experiments/external_denoiser_benchmark_v1_dependencies.json",
+      "sha256": "bc5ee86bf09c83b5415a9d9aa68476a5d949464007278e0b251288a928307801"
+    },
+    "development": {
+      "bytes": 928412,
+      "path": "data/experiment/quality_v4_development_v2.npz",
+      "sha256": "c4519cf876a9ec3cf380624aaffe47ab2682671be7f6475de7703a54fc4f9cff"
+    },
+    "development_lock": {
+      "bytes": 4036,
+      "path": "data/experiment/quality_v4_development_v2_LOCK.json",
+      "sha256": "56e925592b81d2811c1640806403cb6b09395839af16fdf866d893c5ad126b3f"
+    },
+    "development_manifest": {
+      "bytes": 629015,
+      "path": "data/experiment/quality_v4_development_v2_manifest.json",
+      "sha256": "0c7f8657591ad37fc631ed689543b0a37863094d2222f707f8bdd7fe7661f27b"
+    },
+    "evidence_controller_source": {
+      "bytes": 46209,
+      "path": "denoiseapt/evidence_controller.py",
+      "sha256": "f1065d5b51f7345d69204cec4630ee53a0b979d7a6a9194026bc5d635f727298"
+    },
+    "experiment_models_source": {
+      "bytes": 12342,
+      "path": "denoiseapt/experiment_models.py",
+      "sha256": "84b5f169d08c005d3f051360bbc29e02809f66e3a89f07d67bec20c87b092612"
+    },
+    "inference_source": {
+      "bytes": 11770,
+      "path": "denoiseapt/inference.py",
+      "sha256": "12098b6c7ec6c2ea844c35cafe48d494435f338be3c4d91ec6ee9055c46d0ca3"
+    },
+    "medical_trace": {
+      "bytes": 14366230,
+      "path": "runs/hybrid_v2_confirmation_fresh_v1/units/seed_17/medical/audit_trace.npz",
+      "sha256": "dacd81a7a22a255f132f6541188497d906de71dc652616e28c30206da93fed0d"
+    },
+    "models_source": {
+      "bytes": 11895,
+      "path": "denoiseapt/models.py",
+      "sha256": "7e6c784a0f553d080bd02e59f763326651f9d0d54707982ab1d92872ee431e66"
+    },
+    "protocol_note": {
+      "bytes": 3974,
+      "path": "experiments/EXTERNAL_DENOISER_BENCHMARK_V1.md",
+      "sha256": "c569eea79e3caa4564e78977a34e48cba2a0133d4b28bfc3ccb3f31cef72312f"
+    },
+    "rins_architecture": {
+      "bytes": 5522,
+      "path": "third_party/benchmarks/RINS-T/architecture.py",
+      "sha256": "62e3e88d8d7f43e3c456603bdd599bb1c65086cda0be87ae3049dc35e52e336b"
+    },
+    "rins_demo": {
+      "bytes": 171566,
+      "path": "third_party/benchmarks/RINS-T/demo.ipynb",
+      "sha256": "13f5ebbf0023eb2f384c4b6eb90f98769314b3163018f337536a52c581eb3464"
+    },
+    "rins_utils": {
+      "bytes": 5183,
+      "path": "third_party/benchmarks/RINS-T/utils.py",
+      "sha256": "b7350965d45b0c6a08c6c7e71ab13915997d517f90e88b89479a6496c4272adf"
+    },
+    "runner": {
+      "bytes": 65160,
+      "path": "experiments/run_external_denoiser_benchmark_v1.py",
+      "sha256": "fd98c7734fbb4d74606ac13d7eca9dbe1089acea09eedaa63c1b173a828efad3"
+    },
+    "runtime_manifest": {
+      "bytes": 2679,
+      "path": "checkpoints/automatic_preservation/runtime_manifest.json",
+      "sha256": "20f384660a28dc5addce59cf03b6f05a0d6674a51dee58cbd963d773ef19e445"
+    },
+    "selection": {
+      "bytes": 9565,
+      "path": "runs/external_denoiser_benchmark_v1/development_selection.json",
+      "sha256": "335f6875e2c660438bf0c45c05cacee3baf293f335c961e8a53683155f8bb64e"
+    },
+    "sensor_trace": {
+      "bytes": 11421392,
+      "path": "runs/hybrid_v2_confirmation_fresh_v1/units/seed_17/sensor/audit_trace.npz",
+      "sha256": "d468d14deed29bcf7eec6febeccca6f8fdfd4b377974d06241643c6116f2b68f"
+    },
+    "tests": {
+      "bytes": 2868,
+      "path": "tests/test_external_denoiser_benchmark_v1.py",
+      "sha256": "7c85896cd0ab8e488caab52a12ed9ab42a5a75bc55bfc372843850eeb62d1b23"
+    },
+    "third_party_notice": {
+      "bytes": 1017,
+      "path": "third_party/benchmarks/THIRD_PARTY_NOTICES.md",
+      "sha256": "6a2ab481017610857e39150a9485abc9fcee61073a74922cd960581ff73b2d92"
+    },
+    "thresholds": {
+      "bytes": 21560,
+      "path": "runs/hybrid_v2_confirmation_fresh_v1/artifacts/calibration_thresholds.json",
+      "sha256": "36c9586566752881632f3a5eaf3c0fe861927f044877af59d8b67f3cfdf6cc10"
+    }
+  },
+  "rins_t": {
+    "guided_input": "Gaussian filter sigma 4 samples",
+    "huber_delta": 0.001,
+    "implementation_role": "internal official-architecture/demo-recipe adaptation",
+    "input_noise_std": 0.03,
+    "iterations": 27,
+    "learning_rate": 0.01,
+    "loss": "Huber",
+    "normalization": "per-window min-max to [0,1]",
+    "official_repository": "https://github.com/EPFL-IMOS/RINS-T",
+    "optimizer": "Adam",
+    "output_ema_alpha": 0.5,
+    "redistribution_allowed_by_this_benchmark": false,
+    "repository_commit": "95d1d9b44b44ba771b2400f5fb68fe42447c5fa2",
+    "seed_per_condition": 42,
+    "software_license_present": false,
+    "workers": 4
+  },
+  "runtime": {
+    "cpu_count": 16,
+    "packages": {
+      "noisereduce_distribution": "3.0.3",
+      "noisereduce_tree_sha256": "97c10188589a805e9580fa8f048b18c8be0cf05759312b10d88c3e1ce8c371ed",
+      "numpy": "2.5.2",
+      "python": "3.12.13",
+      "pywavelets_distribution": "1.8.0",
+      "pywt_runtime": "1.8.0",
+      "pywt_tree_sha256": "519d4faf7b0dec773ca3ed9431366d0e1d69d2dfbeb43cc068f4d839277c699c",
+      "scipy": "1.18.0"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "torch": "2.13.0+cpu"
+  },
+  "schema_version": 1,
+  "scientific_scope": {
+    "comparisons_are_descriptive": true,
+    "confirmation_claim_eligible": false,
+    "panel_opened_before_comparator_roster_was_selected": true,
+    "published_scores_copied_into_table": false,
+    "retrospective": true,
+    "state_of_the_art_claim_eligible": false
+  },
+  "selection_sha256": "f9029afa2f067e677bd3f2852eb1fda819e67efcd1ca5fe85861fdf83deb496f",
+  "status": "FROZEN_BEFORE_EXTERNAL_METHOD_OUTPUTS"
+}

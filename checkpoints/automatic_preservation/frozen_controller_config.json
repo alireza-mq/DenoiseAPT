@@ -1,0 +1,85 @@
+{
+  "artifact_sha256": "5aa8bb21ce8493f1a54e67fa9a6eb50cf282307e39499137faf0ef02d771f892",
+  "confirmation_results": null,
+  "controller_config": {
+    "algorithm_version": "evidence-projection-v1",
+    "blend_grid": [
+      0.0,
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ],
+    "concern_min_beta": 0.0,
+    "concern_threshold": 0.62,
+    "fabrication_dilation": 8,
+    "fallback": "observation",
+    "max_auto_changed_fraction": 0.35,
+    "max_expansion_rounds": 64,
+    "max_retained_energy_fraction": 1.0,
+    "max_score_evaluations": 4096,
+    "preserve_peak_ratio": 0.9,
+    "repair_padding": 8,
+    "required_witness_ids": [
+      "A_causal_mlp",
+      "B_causal_conv"
+    ],
+    "score_atol": 1e-06,
+    "strict_determinism": true,
+    "strict_union": true,
+    "tile_width": 8
+  },
+  "controller_config_sha256": "ebfd2d2c0d2a5d298e6319dcd6c9f12487c341ad72a7e2e66d9dfd94c7b24ae3",
+  "development_metadata": {
+    "base_model": "denoiseapt_lambda_0p25",
+    "base_model_seeds": [
+      17,
+      29,
+      43
+    ],
+    "confirmation_data_accessed": false,
+    "detector_C_used_for_selection_or_gate": false,
+    "development_only": true,
+    "frozen_at_utc": "2026-08-13T07:26:55.325743+00:00",
+    "grid_sha256": "37731b2fa7198528d3a72bcd2eae7c1409658cd4c0e93299b1df05d096fa788f",
+    "selected_config_id": "strict_local_peak90",
+    "selection_summary": {
+      "abstained_supported_event_opportunity_rate": 0.0,
+      "abstention_exact_observation_failures": 0,
+      "automatic_postcondition_failures": 0,
+      "base_configured_witness_false_generated_events": 0,
+      "condition_abstention_rate": 0.0,
+      "conditions": 100,
+      "config_id": "strict_local_peak90",
+      "config_sha256": "ebfd2d2c0d2a5d298e6319dcd6c9f12487c341ad72a7e2e66d9dfd94c7b24ae3",
+      "controller_configured_witness_false_generated_events": 0,
+      "eligible": true,
+      "gates": {
+        "abstention_budget": true,
+        "automatic_postconditions": true,
+        "exact_observation_abstention": true,
+        "false_generation_not_worse": true,
+        "rmse_noninferiority": true
+      },
+      "mean_controller_latency_ms": 2.652325832968927,
+      "mean_retained_observation_energy_fraction": 0.01213095797446374,
+      "mean_retained_sample_fraction": 0.001953125,
+      "mean_source_group_base_rmse": 1.4653273574450942,
+      "mean_source_group_controller_rmse": 1.4659444570263116,
+      "rmse_ratio_to_base_dapt": 1.0004211342797102,
+      "seeds": 1,
+      "source_groups": 5
+    },
+    "selection_witnesses": [
+      "A_causal_mlp",
+      "B_causal_conv"
+    ],
+    "source_protocol_manifest_sha256": "92efe50ed865bf9e0f44f84312e392be757152d11ab6de4b6b1ca72d7c209d0e",
+    "spent_splits": [
+      "validation",
+      "test",
+      "transfer"
+    ]
+  },
+  "schema_version": 1
+}

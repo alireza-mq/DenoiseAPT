@@ -1,0 +1,183 @@
+{
+  "artifacts": {
+    "benchmark_outputs.npz": {
+      "bytes": 25146384,
+      "sha256": "d599f15d6162213d570c5e917030adb59c65fa54a59e56a1738d15a98a2bf938"
+    },
+    "waveform_rows.csv": {
+      "bytes": 7690775,
+      "sha256": "202a9e623037d04ecda38f78704f4180bcf548ff1dea5acf1cf1794df27d84ff"
+    },
+    "witness_rows.csv": {
+      "bytes": 14019464,
+      "sha256": "524b6f67e43f632143c67345f55c9d02894ee4d886e0df5ffbd1bb74560f4935"
+    }
+  },
+  "cardinality": {
+    "conditions": 2700,
+    "corrupted_conditions": 2592,
+    "source_groups": 32,
+    "waveform_rows": 16200,
+    "witness_rows": 32400
+  },
+  "development_selection": {
+    "selected_noisereduce": {
+      "config_id": "noisereduce_stationary_p0.50_n32",
+      "elapsed_seconds": 21.119955700007267,
+      "n_fft": 32,
+      "prop_decrease": 0.5,
+      "stationary": true,
+      "validation_os_nrmse": 0.36891446973785363
+    },
+    "selected_wavelet": {
+      "config_id": "wavelet_sym4_hard_0.50",
+      "elapsed_seconds": 0.1361019999603741,
+      "threshold_mode": "hard",
+      "threshold_multiplier": 0.5,
+      "validation_os_nrmse": 0.24502545766754028,
+      "wavelet": "sym4"
+    },
+    "selection_sha256": "f9029afa2f067e677bd3f2852eb1fda819e67efcd1ca5fe85861fdf83deb496f"
+  },
+  "execution_identity_sha256": "43e2c01c47e422a2632b7a5d43d1c0fca69ce25f12945d5d82ddc2d6e84d3cbc",
+  "latency_ms_per_window_by_domain": {
+    "medical": {
+      "corrupted_input": 0.0,
+      "denoiseapt": 207.73999646663046,
+      "median_filter_w3": 0.07011666665008913,
+      "noisereduce": 29.306097933324054,
+      "rins_t": 64.72345346666407,
+      "wavelet_shrinkage": 0.11845033332550277
+    },
+    "sensor": {
+      "corrupted_input": 0.0,
+      "denoiseapt": 197.32392383394958,
+      "median_filter_w3": 0.06718483331496827,
+      "noisereduce": 28.53748333329956,
+      "rins_t": 64.5578105833071,
+      "wavelet_shrinkage": 0.11419758331612684
+    }
+  },
+  "limitations": [
+    "The comparator roster was selected after the panel had been opened; all comparisons are retrospective and descriptive.",
+    "RINS-T used an official-architecture/demo-recipe adaptation from a repository with no software license at the pinned commit; its code is not redistributed by this benchmark.",
+    "Configured-scorer evidence retention is not physical anomaly truth or detector-independent preservation.",
+    "ECG-specific methods were excluded because the mixed Medical track includes non-ECG data and lacks sampling-rate and lead metadata."
+  ],
+  "methods": {
+    "corrupted_input": {
+      "anomaly_region_os_nrmse": 0.20114505652829967,
+      "anomaly_region_os_nrmse_by_domain": {
+        "medical": 0.20537143624211107,
+        "sensor": 0.1969186768144883
+      },
+      "evidence_lost": 0,
+      "evidence_retained_numerator": 2166,
+      "evidence_retained_percent": null,
+      "evidence_retention_denominator": 2166,
+      "new_output_only_intervals": 0,
+      "overall_os_nrmse": 0.2088335577294494,
+      "overall_os_nrmse_by_domain": {
+        "medical": 0.20790870893819932,
+        "sensor": 0.20975840652069944
+      }
+    },
+    "denoiseapt": {
+      "anomaly_region_os_nrmse": 0.18559590558093653,
+      "anomaly_region_os_nrmse_by_domain": {
+        "medical": 0.17887520592630582,
+        "sensor": 0.1923166052355672
+      },
+      "evidence_lost": 30,
+      "evidence_retained_numerator": 2136,
+      "evidence_retained_percent": 98.61495844875347,
+      "evidence_retention_denominator": 2166,
+      "new_output_only_intervals": 0,
+      "overall_os_nrmse": 0.1863429422759474,
+      "overall_os_nrmse_by_domain": {
+        "medical": 0.1952385589778516,
+        "sensor": 0.17744732557404314
+      }
+    },
+    "median_filter_w3": {
+      "anomaly_region_os_nrmse": 0.1899798725887435,
+      "anomaly_region_os_nrmse_by_domain": {
+        "medical": 0.11781869812830276,
+        "sensor": 0.26214104704918423
+      },
+      "evidence_lost": 505,
+      "evidence_retained_numerator": 1661,
+      "evidence_retained_percent": 76.68513388734995,
+      "evidence_retention_denominator": 2166,
+      "new_output_only_intervals": 0,
+      "overall_os_nrmse": 0.1548290545050969,
+      "overall_os_nrmse_by_domain": {
+        "medical": 0.12274575534589992,
+        "sensor": 0.1869123536642939
+      }
+    },
+    "noisereduce": {
+      "anomaly_region_os_nrmse": 0.3488792769961945,
+      "anomaly_region_os_nrmse_by_domain": {
+        "medical": 0.3007020565045014,
+        "sensor": 0.3970564974878875
+      },
+      "evidence_lost": 792,
+      "evidence_retained_numerator": 1374,
+      "evidence_retained_percent": 63.43490304709141,
+      "evidence_retention_denominator": 2166,
+      "new_output_only_intervals": 9,
+      "overall_os_nrmse": 0.3593820068862481,
+      "overall_os_nrmse_by_domain": {
+        "medical": 0.31312934878214876,
+        "sensor": 0.4056346649903474
+      }
+    },
+    "rins_t": {
+      "anomaly_region_os_nrmse": 0.36262276223730255,
+      "anomaly_region_os_nrmse_by_domain": {
+        "medical": 0.31061865829853363,
+        "sensor": 0.4146268661760715
+      },
+      "evidence_lost": 940,
+      "evidence_retained_numerator": 1226,
+      "evidence_retained_percent": 56.60203139427516,
+      "evidence_retention_denominator": 2166,
+      "new_output_only_intervals": 354,
+      "overall_os_nrmse": 0.2983392241329479,
+      "overall_os_nrmse_by_domain": {
+        "medical": 0.3275219716425606,
+        "sensor": 0.26915647662333514
+      }
+    },
+    "wavelet_shrinkage": {
+      "anomaly_region_os_nrmse": 0.19610500866669825,
+      "anomaly_region_os_nrmse_by_domain": {
+        "medical": 0.19888660558631532,
+        "sensor": 0.19332341174708118
+      },
+      "evidence_lost": 43,
+      "evidence_retained_numerator": 2123,
+      "evidence_retained_percent": 98.01477377654663,
+      "evidence_retention_denominator": 2166,
+      "new_output_only_intervals": 62,
+      "overall_os_nrmse": 0.20242296760857273,
+      "overall_os_nrmse_by_domain": {
+        "medical": 0.20188657676737468,
+        "sensor": 0.20295935844977078
+      }
+    }
+  },
+  "protocol_id": "denoiseapt-external-denoiser-benchmark-retrospective-v1",
+  "schema_version": 1,
+  "scientific_scope": {
+    "comparisons_are_descriptive": true,
+    "confirmation_claim_eligible": false,
+    "panel_opened_before_comparator_roster_was_selected": true,
+    "published_scores_copied_into_table": false,
+    "retrospective": true,
+    "state_of_the_art_claim_eligible": false
+  },
+  "status": "COMPLETE_RETROSPECTIVE_DESCRIPTIVE_BENCHMARK",
+  "summary_sha256": "c024b65b860e7e446a3f46f008b032cabc30205d35a151968fbc4ad414e96f76"
+}

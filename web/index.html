@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DenoiseAPT automatic and interactive anomaly-evidence-preserving generative time-series denoising demonstration">
+  <title>DenoiseAPT Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to analysis workspace</a>
+
+  <header class="app-header">
+    <div class="brand-block">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" focusable="false">
+          <path d="M3 18h6l3-7 4 14 4-18 4 11h5"/>
+        </svg>
+      </div>
+      <div>
+        <p class="eyebrow">Evidence-aware time-series denoising</p>
+        <h1>Denoise<span>APT</span></h1>
+      </div>
+    </div>
+    <div class="header-status" hidden>
+      <span id="healthDot" class="health-dot is-checking" aria-hidden="true"></span>
+      <span id="healthText">Connecting to analysis service…</span>
+    </div>
+  </header>
+
+  <main id="workspace">
+    <section class="control-rail" aria-labelledby="setupTitle">
+      <div class="rail-intro">
+        <p class="step-kicker">Stage 1</p>
+        <h2 id="setupTitle">Prepare the case</h2>
+        <p>Select a packaged case or inspect your own univariate signal.</p>
+      </div>
+
+      <form id="analysisForm" novalidate>
+        <fieldset>
+          <legend>Data source</legend>
+          <div class="segmented" role="radiogroup" aria-label="Data source">
+            <label><input type="radio" name="source" value="catalog" checked><span>Packaged case</span></label>
+            <label><input type="radio" name="source" value="upload"><span>Upload CSV</span></label>
+          </div>
+
+          <div id="catalogFields" class="field-stack">
+            <label for="caseSelect">Case</label>
+            <select id="caseSelect" name="case" disabled>
+              <option value="">Loading cases…</option>
+            </select>
+            <p id="caseMeta" class="field-note">Cases are loaded from the local dataset package.</p>
+          </div>
+
+          <div id="uploadFields" class="field-stack" hidden>
+            <label class="file-drop" for="csvFile">
+              <span class="file-drop-title">Choose a CSV file</span>
+              <span>One numeric value column; an optional time column is supported.</span>
+              <input id="csvFile" type="file" accept=".csv,text/csv">
+            </label>
+            <p id="fileMeta" class="field-note">The file is parsed locally before analysis.</p>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Window</legend>
+          <div class="two-fields">
+            <div>
+              <label for="windowStart">Start index</label>
+              <input id="windowStart" type="number" min="0" value="0" step="1">
+            </div>
+            <div>
+              <label for="windowLength">Samples</label>
+              <input id="windowLength" type="number" min="64" max="2048" value="512" step="1">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Controlled corruption</legend>
+          <label for="corruptionFamily">Family</label>
+          <select id="corruptionFamily">
+            <option value="gaussian">Gaussian</option>
+            <option value="impulse" selected>Impulse</option>
+            <option value="drift">Drift</option>
+            <option value="mixed">Mixed</option>
+            <option value="none">None</option>
+          </select>
+
+          <div class="range-row">
+            <div class="range-heading">
+              <label for="severity">Severity</label>
+              <output id="severityValue" for="severity">0.35</output>
+            </div>
+            <input id="severity" type="range" min="0" max="1" step="0.05" value="0.35">
+            <div class="range-labels" aria-hidden="true"><span>Subtle</span><span>Severe</span></div>
+          </div>
+
+          <label for="seed">Random seed</label>
+          <div class="input-action">
+            <input id="seed" type="number" min="0" max="2147483647" value="17" step="1">
+            <button id="randomizeSeed" class="icon-button" type="button" aria-label="Generate a new random seed" title="New random seed">↻</button>
+          </div>
+        </fieldset>
+
+        <button id="runButton" class="primary-button" type="submit">
+          <span class="button-label">Run comparison</span>
+          <span class="button-loader" aria-hidden="true"></span>
+        </button>
+        <p id="formError" class="form-error" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <div class="main-column">
+      <section class="workspace-head" aria-labelledby="compareTitle">
+        <div>
+          <p class="step-kicker">Stage 2</p>
+          <h2 id="compareTitle">Compare and inspect</h2>
+          <p id="caseHeading">Choose a case to compare restoration and anomaly evidence.</p>
+        </div>
+        <div class="head-actions">
+          <button id="resetView" class="secondary-button" type="button" disabled>Reset view</button>
+          <button id="exportButton" class="secondary-button" type="button" disabled>Export result</button>
+        </div>
+      </section>
+
+      <section id="emptyState" class="empty-state" aria-live="polite">
+        <div class="empty-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <h3>No comparison yet</h3>
+        <p>Configure a case, then run all denoisers on the same observation.</p>
+      </section>
+
+      <div id="results" hidden>
+        <section class="plot-card signal-card" aria-labelledby="signalsTitle">
+          <div class="card-heading">
+            <div>
+              <h3 id="signalsTitle">Synchronized signals</h3>
+              <p>Drag across any panel to inspect an interval. Scroll to zoom; double-click to reset.</p>
+            </div>
+            <div id="signalLegend" class="legend" aria-label="Signal legend"></div>
+          </div>
+          <div id="signalPlots" class="small-multiples"></div>
+          <p id="plotReadout" class="plot-readout" aria-live="polite">Move over a plot to read sample values.</p>
+        </section>
+
+        <section class="analysis-grid">
+          <div class="plot-card evidence-card">
+            <div class="card-heading">
+              <div>
+                <h3>Anomaly evidence</h3>
+                <p>Scores from frozen witness A; certification, when available, checks both A and B.</p>
+              </div>
+              <div id="scoreLegend" class="legend" aria-label="Anomaly score legend"></div>
+            </div>
+            <div class="canvas-wrap score-wrap">
+              <canvas id="scoreCanvas" tabindex="0" aria-label="Anomaly score comparison over time"></canvas>
+              <div class="plot-tooltip" id="scoreTooltip" hidden></div>
+            </div>
+          </div>
+
+          <aside class="inspector-card" aria-labelledby="inspectorTitle">
+            <div class="card-heading">
+              <div>
+                <p class="step-kicker">Selected interval</p>
+                <h3 id="inspectorTitle">Interval inspector</h3>
+              </div>
+              <span id="concernBadge" class="concern-badge is-neutral">None</span>
+            </div>
+            <p id="intervalLabel" class="interval-label">Select a region in a plot or concern timeline.</p>
+            <div class="cue-list" aria-label="Preservation concern cues">
+              <div class="cue-row">
+                <div><span>Score change</span><output id="scoreCueValue">—</output></div>
+                <div class="cue-track"><span id="scoreCueBar"></span></div>
+              </div>
+              <div class="cue-row">
+                <div><span>Morphology change</span><output id="morphCueValue">—</output></div>
+                <div class="cue-track"><span id="morphCueBar"></span></div>
+              </div>
+              <div class="cue-row">
+                <div><span>Stochastic disagreement (disabled)</span><output id="uncertaintyCueValue">0</output></div>
+                <div class="cue-track"><span id="uncertaintyCueBar"></span></div>
+              </div>
+            </div>
+            <p class="inspector-note">These are inspection cues, not calibrated failure probabilities. The live protocol uses one deterministic pass, so stochastic disagreement is not estimated.</p>
+          </aside>
+        </section>
+
+        <section class="plot-card concern-card" aria-labelledby="concernTitle">
+          <div class="card-heading compact">
+            <div>
+              <h3 id="concernTitle">Local preservation concern</h3>
+              <p>Click or drag to select a region for intervention.</p>
+            </div>
+            <div class="concern-key" aria-label="Concern levels">
+              <span><i class="low"></i>Low</span><span><i class="medium"></i>Medium</span><span><i class="high"></i>High</span>
+            </div>
+          </div>
+          <div class="canvas-wrap concern-wrap">
+            <canvas id="concernCanvas" tabindex="0" aria-label="Local preservation concern over time"></canvas>
+            <div class="plot-tooltip" id="concernTooltip" hidden></div>
+          </div>
+        </section>
+
+        <section id="certificationCard" class="certification-card is-review" aria-labelledby="certificationTitle">
+          <div class="certification-heading">
+            <div>
+              <p class="step-kicker">Automatic preservation</p>
+              <h3 id="certificationTitle">Controller status</h3>
+            </div>
+            <span id="certificationBadge" class="certificate-badge is-unverified">Not evaluated</span>
+          </div>
+          <p id="certificationSummary" class="certification-summary">Run a case to inspect its threshold-provenance and witness certificate.</p>
+          <dl class="certificate-facts">
+            <div><dt>Mode</dt><dd id="certificateMode">—</dd></div>
+            <div><dt>Decision</dt><dd id="certificateDecision">—</dd></div>
+            <div><dt>Repair intervals</dt><dd id="certificateRepairs">—</dd></div>
+            <div><dt>Controller latency</dt><dd id="certificateLatency">—</dd></div>
+          </dl>
+          <details class="certificate-details">
+            <summary>Certificate scope and audit</summary>
+            <p id="certificateScope"></p>
+            <p><strong>Repair map:</strong> <span id="certificateRepairDetail">not available</span></p>
+            <p><strong>Witness checks:</strong> <span id="certificateWitnesses">not available</span></p>
+            <ul id="certificateLimitations"></ul>
+            <p class="audit-hash">Decision audit: <code id="certificateAudit">not available</code></p>
+          </details>
+        </section>
+
+        <section class="intervention-section" aria-labelledby="interventionTitle">
+          <div class="intervention-copy">
+            <p class="step-kicker">Stage 3</p>
+            <h2 id="interventionTitle">Intervene and verify</h2>
+            <p>The established DenoiseAPT output initializes the session. Human edits are reversible and rechecked when certification is in scope.</p>
+          </div>
+          <div class="action-panel">
+            <div class="action-buttons" role="group" aria-label="Intervention actions">
+              <button class="action-button accept" type="button" data-action="accept" disabled><strong>Use repair</strong><span>Generative candidate</span></button>
+              <button class="action-button protect" type="button" data-action="protect" disabled><strong>Protect</strong><span>Use observation</span></button>
+              <button class="action-button blend" type="button" data-action="blend" disabled><strong>Blend</strong><span>Mix both signals</span></button>
+              <button class="action-button automatic" type="button" data-action="restore_automatic" disabled><strong>Restore auto</strong><span>Frozen baseline</span></button>
+              <button class="action-button revert" type="button" data-action="revert" disabled><strong>Revert</strong><span>Undo last edit</span></button>
+            </div>
+            <div class="blend-control">
+              <div class="range-heading">
+                <label for="blendWeight">Observation weight β</label>
+                <output id="blendValue" for="blendWeight">0.50</output>
+              </div>
+              <input id="blendWeight" type="range" min="0" max="1" step="0.05" value="0.50" disabled>
+              <div class="range-labels"><span>Denoised</span><span>Observed</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="metrics-card" aria-labelledby="metricsTitle">
+          <div class="card-heading">
+            <div>
+              <h3 id="metricsTitle">Evaluation measures</h3>
+              <p>Reference-based measures appear only when a known reference is available.</p>
+            </div>
+            <span id="metricScope" class="scope-pill">Evaluation scope</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">Method</th><th scope="col">RMSE ↓</th><th scope="col">SNR Δ ↑</th><th scope="col" title="Lightweight demonstration approximation; not the official VUS-PR evaluator">VUS-PR approx. ↑</th><th scope="col">Event recall ↑</th><th scope="col">Erasure ↓</th><th scope="col">False event ↓</th><th scope="col" title="End-to-end learned analysis latency; not generator-only timing">Pipeline latency</th></tr>
+              </thead>
+              <tbody id="metricsBody"></tbody>
+            </table>
+          </div>
+          <p class="metric-note"><strong>Evaluation note:</strong> this interface reports a lightweight VUS-PR approximation for interactive feedback. Publication tables must be produced with the official evaluator.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <footer>
+    <p>DenoiseAPT research demonstration · Local processing service</p>
+    <p>Certificates are limited to configured witnesses, frozen thresholds, and recorded normalization.</p>
+  </footer>
+
+  <template id="plotTemplate">
+    <article class="mini-plot">
+      <div class="mini-plot-head"><h4></h4><span></span></div>
+      <div class="canvas-wrap"><canvas tabindex="0"></canvas><div class="plot-tooltip" hidden></div></div>
+    </article>
+  </template>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
