@@ -58,22 +58,24 @@ def test_catalog_preserves_synthetic_and_benchmark_metadata():
         assert benchmark["benchmark_case"] is True
 
 
-def test_excluded_heldout_replay_is_optional_for_health_and_catalog():
-    replay = ROOT / "data" / "prepared" / "tsb_ad_cats_heldout_replay.npz"
-    assert not replay.exists()
+def test_bundled_heldout_replays_are_ready_and_ordered():
     service = DemoService(ROOT)
-    assert service.health()["heldout_replay_ready"] is False
+    health = service.health()
+    assert health["heldout_replay_ready"] is True
+    assert health["heldout_replay_count"] == 2
     catalog = service.list_cases()
-    assert "tsb_ad_cats_heldout_replay" not in {
-        case["id"] for case in catalog["cases"]
-    }
-    assert not any(
-        warning["case_id"] == "tsb_ad_cats_heldout_replay"
-        for warning in catalog["warnings"]
-    )
+    replay_ids = [
+        case["id"] for case in catalog["cases"] if case["benchmark_replay"]
+    ]
+    assert replay_ids == [
+        "tsb_ad_cats_heldout_replay",
+        "tsb_ad_mitdb_anomaly_preservation_replay",
+    ]
+    assert catalog["default_case_id"] == "tsb_ad_cats_heldout_replay"
+    assert catalog["warnings"] == []
 
 
-def test_csv_upload_remains_review_only_without_heldout_replay():
+def test_csv_upload_remains_review_only_with_bundled_replays():
     values = np.sin(np.linspace(0.0, 12.0, 128)).tolist()
     response = DemoService(ROOT).analyze(
         {

@@ -15,13 +15,13 @@ numbers. All intervals are zero-based and half-open: `[start, end)`.
 
 The revised browser recognizes two modes:
 
-- an optional, integrity-pinned held-out benchmark replay; and
+- two bundled, integrity-pinned held-out benchmark replays; and
 - local CSV inspection in explicit review-only mode.
 
-The optional replay is a derived CATSv2 simulated-telemetry window. It is not
-distributed in this public repository pending review of upstream
-redistribution terms. When no authorized replay is installed, the browser has
-no benchmark preset and directs the user to CSV upload.
+The main replay is a derived CATSv2 simulated-telemetry window. The second is a
+derived MIT-BIH ECG window selected to highlight anomaly preservation. Both are
+bundled under separate upstream-data terms recorded in `LICENSES/`; neither is
+covered by the project MIT license.
 
 The deterministic synthetic fixture retained in the public package is for API,
 setup, and regression tests only. It may be returned by the cases endpoint, but
@@ -29,7 +29,7 @@ the browser filters it out because it is not marked as a benchmark replay.
 
 ## Revised comparison schema
 
-An installed replay exposes only the following synchronized traces:
+A replay exposes only the following synchronized traces:
 
 | API key | Interface label |
 |---|---|
@@ -56,15 +56,15 @@ A successful response marks the local analysis service ready:
   "status": "ok",
   "device": "cpu",
   "models_ready": true,
-  "heldout_replay_ready": false,
+  "heldout_replay_ready": true,
+  "heldout_replay_count": 2,
   "max_request_bytes": 16777216
 }
 ```
 
 Only `status` is required. The remaining fields are optional diagnostics.
-`heldout_replay_ready` becomes true only when the optional replay, its
-manifest, and the pinned threshold record are present and pass integrity
-validation.
+`heldout_replay_ready` is true only when at least one replay, its manifest, and
+the pinned threshold record are present and pass integrity validation.
 
 ## `GET /api/cases`
 
@@ -75,36 +75,40 @@ whose `benchmark_replay` field is `true`.
 {
   "cases": [
     {
-      "id": "installed-replay-id",
-      "name": "Installed held-out replay",
+      "id": "tsb_ad_cats_heldout_replay",
+      "name": "TSB-AD-U · CATS rich dynamics · held-out replay",
       "domain": "Sensor",
       "length": 512,
       "benchmark_replay": true,
       "held_out": true,
       "synthetic": true,
       "fixed_window": true,
+      "demo_role": "main_workflow",
+      "demo_order": 0,
       "default_family": "gaussian",
       "default_severity": 0.75,
       "default_replicate": 0
     }
   ],
+  "default_case_id": "tsb_ad_cats_heldout_replay",
   "warnings": []
 }
 ```
 
 `id` and `name` are required for any case. Replay metadata improves validation
-and scientific context but does not authorize redistribution. A replay must not
-be listed unless its artifact and manifest pass their pinned integrity checks.
+and scientific context. `demo_order` controls selector order, while
+`default_case_id` identifies the main workflow. A replay must not be listed
+unless its artifact and manifest pass their pinned integrity checks.
 
 ## `POST /api/analyze`
 
 Exactly one of `case_id` or `upload` is supplied.
 
-### Installed replay request
+### Replay request
 
 ```json
 {
-  "case_id": "installed-replay-id",
+  "case_id": "tsb_ad_cats_heldout_replay",
   "window": {"start": 0, "length": 512},
   "corruption": {"family": "gaussian", "severity": 0.75, "replicate": 0}
 }
@@ -153,6 +157,8 @@ scientific scope:
     "reference_available": true,
     "reference_scope": "pre-corruption source window; evaluation only",
     "method_scope": "frozen matched outputs",
+    "display_witness": "A_causal_mlp",
+    "display_witness_label": "Scorer A",
     "corruption": {"demonstration_only": true}
   },
   "time": [],
@@ -179,10 +185,12 @@ scientific scope:
 ```
 
 For each displayed trace with a known reference, `metrics` may contain finite
-`overall_os_nrmse` and `anomaly_os_nrmse` fields. This contract deliberately
-does not embed condition-level results. The reference and labels are
-evaluation-only. External comparator arrays are frozen matched outputs rather
-than browser-time executions.
+`overall_os_nrmse` and `anomaly_os_nrmse` fields. These legacy API keys hold the
+study-defined whole-window and event-region NRMSE values; `OS-NRMSE` is not
+presented as a standard scientific term. This contract deliberately does not
+embed condition-level results. The reference and labels are evaluation-only.
+External comparator arrays are frozen matched outputs rather than browser-time
+executions.
 
 `limitations` must disclose that the condition is illustrative and selected
 after panel inspection, aggregate conclusions come from the sealed benchmark,
@@ -250,11 +258,13 @@ itself remains reversible.
 
 ## Evidence semantics
 
-For an installed replay, the local evidence band marks shared configured scorer
-support. For a CSV upload, it is instead a continuous review-only comparison
-cue and is not calibrated preservation evidence. Neither display is a
-probability or diagnosis. A passed A/B status is limited to the configured
-frozen witnesses, thresholds, normalization, and eligible replay contract.
+For a replay, the local evidence band marks shared support from the display
+witness named in `meta.display_witness`; the complete-window status still uses
+configured Scorers A and B. For a CSV upload, the band is instead a continuous
+review-only comparison cue and is not calibrated preservation evidence. Neither
+display is a probability or diagnosis. A passed A/B status is limited to the
+configured frozen witnesses, domain thresholds, normalization, and eligible
+replay contract.
 Observation-supported evidence may itself reflect measurement corruption, and
 blending observation values can reintroduce that corruption. No status may be
 described as proof of anomaly truth, deployment safety, or generalization to an

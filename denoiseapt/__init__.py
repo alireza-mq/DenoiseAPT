@@ -4,7 +4,7 @@ The public surface is intentionally compact; detailed training components remain
 available from their defining modules.
 """
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 from .actions import SignalSession, apply_interval_action
 from .concern import ConcernConfig, ConcernCues, compute_concern_cues

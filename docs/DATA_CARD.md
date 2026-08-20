@@ -4,7 +4,7 @@
 
 DenoiseAPT exposes two user-facing paths with different scientific scopes:
 
-1. an optional, integrity-pinned benchmark replay for the guided evaluation
+1. two integrity-pinned benchmark replays for the guided evaluation
    demonstration; and
 2. compatible local CSV inspection in explicit review-only mode.
 
@@ -13,7 +13,7 @@ installation tests. It is hidden from the revised benchmark selector.
 
 ## Primary benchmark source
 
-The optional replay is derived from the univariate TSB-AD benchmark:
+The replays are derived from the univariate TSB-AD benchmark:
 
 - Project: <https://github.com/TheDatumOrg/TSB-AD>
 - Official archive: <https://www.thedatum.org/datasets/TSB-AD-U.zip>
@@ -23,7 +23,7 @@ The optional replay is derived from the univariate TSB-AD benchmark:
   Towards a Reliable Time-Series Anomaly Detection Benchmark*, NeurIPS 2024
   Datasets and Benchmarks Track.
 
-## Optional CATSv2 replay
+## CATSv2 main-workflow replay
 
 The guided demonstration uses a fixed 512-point CATSv2 simulated-telemetry
 window from the TSB-AD-U Sensor confirmation panel. Its source group is held out
@@ -41,15 +41,28 @@ because its repeated changes make the interface workflow easier to see. It is
 an illustrative replay, not an additional benchmark experiment, and aggregate
 claims must remain tied to the registered aggregate evaluation.
 
-The derived replay is intentionally excluded from the public repository while
-upstream redistribution terms are reviewed. A locally authorized copy is
-loaded only when both the artifact and its integrity manifest are present and
-their pinned hashes agree. The public checkout therefore has no benchmark
-preset and directs users to CSV review-only mode.
+The replay is bundled with an integrity manifest and is governed by CC BY 4.0,
+as recorded in `LICENSES/CATS-DATA-NOTICE.md`. It is not covered by the project
+MIT license.
+
+## MIT-BIH ECG anomaly-preservation replay
+
+The second replay uses a fixed 512-time-point ECG window from the MIT-BIH
+Arrhythmia Database constituent of the held-out TSB-AD-U Medical confirmation
+panel. The clean reference and corrupted observation both contain configured
+Scorer A and B event opportunities near time index 232. Our Model retains both;
+Median Filter and RINS-T lose both, Wavelet loses one, and Noisereduce retains
+both but has higher reconstruction error on this condition.
+
+This replay was also selected after panel inspection and is illustrative. The
+configured evidence is not a medical diagnosis, and the interface makes no
+claim about unseen scorers. The artifact is governed by ODC Attribution 1.0,
+with attribution and citation in `LICENSES/MITDB-DATA-NOTICE.md`; it is not
+covered by the project MIT license.
 
 ## Frozen comparison outputs
 
-For the optional replay, the reference, corrupted observation, Median Filter,
+For either replay, the reference, corrupted observation, Median Filter,
 Wavelet Thresholding, Noisereduce, RINS-T Adaptation, and Our Model traces all
 belong to the same frozen condition. External comparators are not executed when
 the browser request is made. The reference and labels support evaluation views

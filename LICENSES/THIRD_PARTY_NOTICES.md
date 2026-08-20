@@ -4,10 +4,12 @@ The runnable demonstration depends on NumPy and PyTorch. Their packages and
 licenses are distributed by their respective projects and are not bundled in
 this repository.
 
-The optional TSB-AD-U data is not redistributed. The download and curation code
-is provided by the TSB-AD project, while individual constituent datasets retain
-their own terms. Review the TSB-AD license table and each original source before
-downloading, redistributing, or using those records commercially.
+Two small TSB-AD-U-derived demonstration replays are redistributed under their
+constituent dataset terms. CATSv2 attribution and CC BY 4.0 terms are recorded
+in [`CATS-DATA-NOTICE.md`](CATS-DATA-NOTICE.md). MIT-BIH Arrhythmia Database
+attribution and ODC Attribution 1.0 terms are recorded in
+[`MITDB-DATA-NOTICE.md`](MITDB-DATA-NOTICE.md). Neither replay is covered by
+the project MIT license. All other TSB-AD-U records remain excluded.
 
 `denoiseapt/publication_metrics.py` contains a minimal NumPy port of the VUS-PR
 algorithm from TSB-AD 1.5, commit

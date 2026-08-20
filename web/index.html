@@ -148,7 +148,7 @@
             <div class="card-heading">
               <div>
               <h3>Anomaly-preservation evidence</h3>
-              <p>Configured Scorer-A traces for the corrupted observation and the current model output; the status check uses Scorers A and B.</p>
+              <p id="evidenceDescription">Configured scorer traces for the corrupted observation and the current model output; the status check uses Scorers A and B.</p>
               </div>
               <div id="scoreLegend" class="legend" aria-label="Anomaly score legend"></div>
             </div>
@@ -169,7 +169,7 @@
             <p id="intervalLabel" class="interval-label">Select a region in a plot or evidence timeline.</p>
             <div class="cue-list" aria-label="Preservation concern cues">
               <div class="cue-row">
-                <div><span>Scorer-A difference</span><output id="scoreCueValue">—</output></div>
+                <div><span id="scoreCueLabel">Scorer difference</span><output id="scoreCueValue">—</output></div>
                 <div class="cue-track"><span id="scoreCueBar"></span></div>
               </div>
               <div class="cue-row">
@@ -189,7 +189,7 @@
           <div class="card-heading compact">
             <div>
               <h3 id="concernTitle">Local preservation evidence</h3>
-              <p id="concernDescription">Shared configured Scorer-A support between the observation and Our Model. Click or drag to select an interval.</p>
+              <p id="concernDescription">Shared configured scorer support between the observation and Our Model. Click or drag to select an interval.</p>
             </div>
             <div id="concernKey" class="concern-key" aria-label="Preservation-evidence key">
               <span><i class="none"></i>No shared support</span><span><i class="shared"></i>Shared support</span>

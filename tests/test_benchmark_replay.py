@@ -42,11 +42,19 @@ def _write_replay(tmp_path: Path) -> Path:
     series = np.tile(reference, (count, 1)).astype(np.float32)
     metadata = {
         "schema_version": 1,
+        "case_id": "fixture_replay",
         "default_condition_id": "condition-04",
+        "benchmark_replay": True,
+        "held_out": True,
+        "target_event_start": 160,
+        "target_event_end": 208,
+        "expert_interval_start": 168,
+        "expert_interval_end": 176,
     }
     np.savez(
         path,
         metadata_json=np.array(json.dumps(metadata, sort_keys=True)),
+        signal=reference,
         reference=reference,
         labels=labels,
         condition_id=condition_id,
@@ -67,6 +75,7 @@ def _write_replay(tmp_path: Path) -> Path:
         "schema_version": 1,
         "artifact": path.name,
         "artifact_sha256": _sha256(path),
+        "default_condition_id": "condition-04",
     }
     path.with_name(f"{path.stem}_manifest.json").write_text(
         json.dumps(manifest), encoding="utf-8"
@@ -74,7 +83,7 @@ def _write_replay(tmp_path: Path) -> Path:
     return path
 
 
-def test_integrity_checked_replay_loads_without_the_excluded_public_npz(tmp_path):
+def test_integrity_checked_replay_loads(tmp_path):
     path = _write_replay(tmp_path)
     replay = load_benchmark_replay(path)
     assert replay.length == 512

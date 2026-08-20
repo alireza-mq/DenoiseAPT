@@ -16,13 +16,15 @@ benchmark. Repository: <https://github.com/alireza-mq/DenoiseAPT>.
 - `data/prepared/synthetic_guided_case.npz`: deterministic fixture retained
   only for API and installation tests; the revised browser hides it from the
   benchmark selector.
+- `data/prepared/*_heldout_replay.npz`: two small, integrity-pinned
+  demonstration replays governed by the separate notices in `LICENSES/`.
 - `reproducibility/`: frozen configuration, receipts, code, and aggregate
   summary for the external-denoiser benchmark.
 - `tests/`: self-contained application and metric tests.
 
-The repository deliberately excludes raw benchmark records, derived evaluation
-windows, condition-level traces, internal run directories, environments,
-third-party source trees, and historical material. See
+The repository deliberately excludes raw benchmark records, all other derived
+evaluation windows, condition-level traces, internal run directories,
+environments, third-party source trees, and historical material. See
 [`docs/ARCHIVE_SCOPE.md`](docs/ARCHIVE_SCOPE.md).
 
 ## Quick start
@@ -47,30 +49,27 @@ chmod +x setup.sh run_demo.sh
 Open <http://127.0.0.1:8765>. The service is intended for local use and has no
 authentication layer, so do not bind it to a public network.
 
-The public checkout does not include a benchmark replay. This is expected: the
-benchmark selector remains empty and the interface directs the user to
-**Upload CSV · review only**. The packaged synthetic fixture is still available
-to automated tests but is not shown as a demonstration case.
+The browser opens with the CATSv2 rich-dynamics replay. A second MIT-BIH ECG
+replay highlights anomaly preservation. The packaged synthetic fixture remains
+available to automated tests but is not shown as a demonstration case.
 
-## Optional held-out benchmark replay
+## Bundled held-out benchmark replays
 
-The local benchmark demonstration uses an integrity-pinned, 512-point replay
-drawn from a held-out TSB-AD-U CATSv2 simulated-telemetry window. It stores one derived
-evaluation window and frozen, matched outputs for the same controlled
-corruption condition. The example was selected after the benchmark panel was
-examined to make the interaction legible; it is illustrative and does not
-replace the aggregate benchmark.
+The main workflow uses an integrity-pinned, 512-time-point replay from a
+held-out TSB-AD-U CATSv2 simulated-telemetry window. The second replay comes
+from a held-out MIT-BIH Arrhythmia Database ECG window and was selected to make
+the preservation tradeoff visible. Each stores one derived evaluation window
+and frozen, matched outputs for the same controlled corruption condition.
+Both examples were selected after the benchmark panel was examined; they are
+illustrative and do not replace the aggregate benchmark.
 
-That derived replay is intentionally omitted from public Git while upstream
-redistribution terms are reviewed. An authorized local copy must include its
-integrity manifest; the service fails closed if the artifact or provenance
-hashes do not match. The omission is not an invitation to reconstruct or
-redistribute the window without checking the constituent dataset terms. See
+The replays are bundled with integrity manifests and separate upstream-data
+notices; the service fails closed if an artifact or provenance hash does not
+match. They are not covered by the project MIT license. See
 [`data/README.md`](data/README.md) and
 [`docs/DATA_CARD.md`](docs/DATA_CARD.md).
 
-When the replay is installed locally, the revised comparison view contains
-only:
+For either replay, the comparison view contains only:
 
 - Reference before corruption (evaluation only)
 - Corrupted Observation
@@ -122,10 +121,9 @@ use a second terminal:
 .\.venv\Scripts\python.exe scripts\smoke_test.py
 ```
 
-These self-contained checks use the hidden deterministic fixture and do not
-turn it into benchmark evidence. Tests that require non-public evaluation data
-remain unavailable unless the corresponding artifacts are installed locally
-under their upstream terms.
+These self-contained checks cover the hidden deterministic fixture and the two
+integrity-pinned demonstration replays. They do not turn any selected window
+into aggregate benchmark evidence.
 
 ## Reproducibility boundary
 
@@ -145,7 +143,9 @@ Please also cite the datasets used in any downstream evaluation.
 
 ## License and third-party material
 
-The DenoiseAPT code is released under the MIT License. See [`LICENSE`](LICENSE),
-[`LICENSES/THIRD_PARTY_NOTICES.md`](LICENSES/THIRD_PARTY_NOTICES.md), and
-[`LICENSES/APACHE-2.0-THIRD-PARTY.txt`](LICENSES/APACHE-2.0-THIRD-PARTY.txt).
-Dataset terms remain with their upstream sources.
+The DenoiseAPT code is released under the MIT License. See [`LICENSE`](LICENSE)
+and [`LICENSES/THIRD_PARTY_NOTICES.md`](LICENSES/THIRD_PARTY_NOTICES.md).
+The two replay artifacts are governed by
+[`LICENSES/CATS-DATA-NOTICE.md`](LICENSES/CATS-DATA-NOTICE.md) and
+[`LICENSES/MITDB-DATA-NOTICE.md`](LICENSES/MITDB-DATA-NOTICE.md), not the
+project MIT license.

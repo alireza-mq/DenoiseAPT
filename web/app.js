@@ -77,6 +77,7 @@
     severity: $("#severity"), severityValue: $("#severityValue"), seed: $("#seed"),
     empty: $("#emptyState"), results: $("#results"),
     caseHeading: $("#caseHeading"), signalPlots: $("#signalPlots"), signalLegend: $("#signalLegend"),
+    evidenceDescription: $("#evidenceDescription"), scoreCueLabel: $("#scoreCueLabel"),
     scoreLegend: $("#scoreLegend"), plotReadout: $("#plotReadout"), plotTemplate: $("#plotTemplate"),
     scoreCanvas: $("#scoreCanvas"), scoreTooltip: $("#scoreTooltip"),
     concernTitle: $("#concernTitle"), concernDescription: $("#concernDescription"),
@@ -172,6 +173,10 @@
       catalogSource.disabled = false;
       catalogSource.removeAttribute("aria-disabled");
       for (const item of state.cases) dom.caseSelect.append(new Option(item.name || item.id, item.id));
+      const defaultCaseId = String(payload.default_case_id || "");
+      if (state.cases.some(item => String(item.id) === defaultCaseId)) {
+        dom.caseSelect.value = defaultCaseId;
+      }
       dom.caseSelect.disabled = false;
       updateCaseMeta();
     } catch (error) {
@@ -183,7 +188,10 @@
   function bindEvents() {
     dom.form.addEventListener("submit", runAnalysis);
     $$('input[name="source"]').forEach(input => input.addEventListener("change", toggleSource));
-    dom.caseSelect.addEventListener("change", updateCaseMeta);
+    dom.caseSelect.addEventListener("change", () => {
+      clearCaseResults();
+      updateCaseMeta();
+    });
     dom.csvFile.addEventListener("change", handleFileSelection);
     const drop = $(".file-drop");
     ["dragenter", "dragover"].forEach(type => drop.addEventListener(type, event => { event.preventDefault(); drop.classList.add("is-dragging"); }));
@@ -226,7 +234,8 @@
   function updateCaseMeta() {
     const item = state.cases.find(c => String(c.id) === dom.caseSelect.value);
     if (!item) return;
-    const details = [item.domain, item.held_out ? "held-out source group" : null, finite(item.length) ? `[0, ${formatInteger(item.length)})` : null,
+    const role = item.demo_role === "main_workflow" ? "main workflow" : item.demo_role === "anomaly_preservation" ? "anomaly-preservation spotlight" : null;
+    const details = [item.domain, role, item.held_out ? "held-out source group" : null, finite(item.length) ? `[0, ${formatInteger(item.length)})` : null,
       finite(item.sample_rate) ? `${formatNumber(item.sample_rate)} Hz` : null,
       finite(item.anomaly_count) ? `${item.anomaly_count} labelled event${item.anomaly_count === 1 ? "" : "s"}` : null].filter(Boolean);
     dom.caseMeta.textContent = details.join(" · ") || "Packaged case ready.";
@@ -243,6 +252,22 @@
       if (finite(item.default_severity)) { dom.severity.disabled = false; dom.severity.value = item.default_severity; updateSeverity(); }
       if (finite(item.default_replicate)) dom.seed.value = item.default_replicate;
     }
+  }
+
+  function clearCaseResults() {
+    state.result = null;
+    state.automaticModel = null;
+    state.selection = null;
+    state.view = null;
+    state.plotEntries = [];
+    dom.results.hidden = true;
+    dom.empty.hidden = false;
+    dom.resetView.disabled = true;
+    dom.exportButton.disabled = true;
+    const title = $("h3", dom.empty), copy = $("p", dom.empty);
+    if (title) title.textContent = "New case selected";
+    if (copy) copy.textContent = "Run comparison to load the selected held-out replay.";
+    updateActions();
   }
 
   async function handleFileSelection() {
@@ -742,16 +767,22 @@
 
   function configureConcernPresentation() {
     if (isBenchmarkReplay()) {
+      const witnessLabel = state.result.meta?.display_witness_label || "Scorer A";
+      dom.evidenceDescription.textContent = `Configured ${witnessLabel} traces for the corrupted observation and the current model output; the status check uses Scorers A and B.`;
+      dom.scoreCueLabel.textContent = `${witnessLabel} difference`;
       dom.concernTitle.textContent = "Local preservation evidence";
-      dom.concernDescription.textContent = "Shared configured Scorer-A support between the observation and Our Model. Click or drag to select an interval.";
+      dom.concernDescription.textContent = `Shared configured ${witnessLabel} support between the observation and Our Model. Click or drag to select an interval.`;
       dom.concernKey.setAttribute("aria-label", "Preservation-evidence key");
       dom.concernKey.replaceChildren(
         concernKeyItem("none", "No shared support"),
         concernKeyItem("shared", "Shared support")
       );
-      dom.concernCanvas.setAttribute("aria-label", "Local configured preservation evidence over time");
+      dom.scoreCanvas.setAttribute("aria-label", `${witnessLabel} score comparison over time`);
+      dom.concernCanvas.setAttribute("aria-label", `Local configured ${witnessLabel} preservation evidence over time`);
       return;
     }
+    dom.evidenceDescription.textContent = "Review-only comparison traces for the observation and current model output; no calibrated scorer decision applies.";
+    dom.scoreCueLabel.textContent = "Scorer difference";
     dom.concernTitle.textContent = "Local comparison cue";
     dom.concernDescription.textContent = "Review-only observation-versus-output comparison cue. It is not calibrated preservation evidence. Click or drag to select an interval.";
     dom.concernKey.setAttribute("aria-label", "Review-only comparison-cue key");

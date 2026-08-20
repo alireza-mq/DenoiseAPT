@@ -1,23 +1,22 @@
 # Demo data
 
-The revised application separates an optional benchmark replay from local CSV
+The revised application separates two bundled benchmark replays from local CSV
 inspection. A deterministic synthetic fixture is retained only for automated
 tests and is not a user-facing data source.
 
-## Optional TSB-AD-U CATSv2 replay
+## Bundled held-out replays
 
-The local benchmark demonstration uses a 512-point held-out window from CATSv2,
-a simulated complex dynamical-system telemetry dataset included in TSB-AD-U. The
-replay contains a derived source window, its evaluation-only reference and
-labels, and frozen matched denoiser outputs for one controlled corruption
-condition. It was selected after panel inspection for visual explanation and
-must not be treated as additional aggregate benchmark evidence.
+The main workflow uses a 512-time-point held-out window from CATSv2, a simulated
+complex dynamical-system telemetry dataset included in TSB-AD-U. The anomaly
+preservation spotlight uses a 512-time-point ECG window derived from the
+MIT-BIH Arrhythmia Database. Each replay contains a derived source window, its
+evaluation-only reference and labels, and frozen matched denoiser outputs for a
+controlled corruption condition.
 
-The replay and its source records are intentionally absent from this public Git
-repository pending review of upstream redistribution terms. An authorized local
-copy is accepted only with its integrity manifest and pinned provenance hashes;
-a missing or mismatched manifest must fail closed. The public checkout therefore
-shows no benchmark preset and directs the user to CSV review-only mode.
+Both windows were selected after panel inspection for visual explanation and
+must not be treated as additional aggregate benchmark evidence. Each artifact
+is accepted only with its integrity manifest and pinned provenance hashes; a
+missing or mismatched manifest fails closed.
 
 ## CSV review-only mode
 
@@ -55,8 +54,8 @@ python scripts/download_data.py --fixture-only --destination data/fixture
   <https://thedatumorg.github.io/TSB-AD/#summary-of-datasets>
 
 The TSB-AD project states that its preprocessing and curation code is released
-under Apache-2.0, while constituent datasets retain their original terms. Its
-dataset summary identifies CATSv2 as simulated telemetry and lists CC BY 4.0.
-The same summary lists no license for UCR; absence of a stated license is not
-permission to redistribute it. Consult and cite the original source before
-publishing or redistributing any dataset-derived artifact.
+under Apache-2.0, while constituent datasets retain their original terms. The
+CATSv2 replay is governed by CC BY 4.0, and the MIT-BIH replay is governed by
+ODC Attribution 1.0. Exact attribution and license links are in
+`LICENSES/CATS-DATA-NOTICE.md` and `LICENSES/MITDB-DATA-NOTICE.md`; neither
+artifact is covered by the project MIT license.

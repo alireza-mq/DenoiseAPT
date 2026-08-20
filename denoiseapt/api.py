@@ -26,8 +26,9 @@ from .metrics import (
 
 SESSION_TTL_SECONDS = 2 * 60 * 60
 MAX_SESSIONS = 32
+DEFAULT_REPLAY_CASE_ID = "tsb_ad_cats_heldout_replay"
 HELDOUT_REPLAY_THRESHOLDS_SHA256 = (
-    "91971048e7b07a8012e525b3cc8db14ab6bfffc9cd472a19648eeb5361433ef3"
+    "2af54b74b6fa4a128311b256b6c9317f716f172335ad6d310d2af6a4d16d7364"
 )
 
 
@@ -200,15 +201,20 @@ class DemoService:
         guided_record = (
             self.root / "data" / "prepared" / "tsb_ad_ucr_medical_guided.npz"
         )
-        replay_record = (
-            self.root / "data" / "prepared" / "tsb_ad_cats_heldout_replay.npz"
+        replay_records = sorted(
+            (self.root / "data" / "prepared").glob("*replay.npz")
         )
+        heldout_replay_count = 0
         try:
             from denoiseapt.benchmark_replay import load_benchmark_replay
 
-            load_benchmark_replay(replay_record)
+            for replay_record in replay_records:
+                load_benchmark_replay(replay_record)
+                heldout_replay_count += 1
             threshold_path = self.root / "config" / "heldout_replay_thresholds.json"
             heldout_replay_ready = (
+                heldout_replay_count > 0
+                and
                 _sha256(threshold_path) == HELDOUT_REPLAY_THRESHOLDS_SHA256
             )
         except (OSError, ValueError, json.JSONDecodeError):
@@ -226,6 +232,7 @@ class DemoService:
             "automatic_runtime_manifest": str(self.checkpoint_path.relative_to(self.root)),
             "guided_case_ready": guided_record.is_file(),
             "heldout_replay_ready": heldout_replay_ready,
+            "heldout_replay_count": heldout_replay_count,
             "guided_certificate_ready": runtime_status["guided_certificate_ready"],
             "guided_certificate_reason": runtime_status["guided_certificate_reason"],
             "uptime_seconds": round(time.time() - self.started_at, 3),
@@ -285,9 +292,30 @@ class DemoService:
                     "default_severity": metadata.get("default_severity"),
                     "default_replicate": metadata.get("default_replicate"),
                     "fixed_window": bool(metadata.get("benchmark_replay", False)),
+                    "demo_role": metadata.get("demo_role"),
+                    "demo_order": metadata.get("demo_order"),
                 }
             )
-        return {"cases": cases, "warnings": warnings}
+        cases.sort(
+            key=lambda item: (
+                int(item["demo_order"]) if item.get("demo_order") is not None else 100,
+                str(item["name"]),
+            )
+        )
+        replay_ids = {item["id"] for item in cases if item["benchmark_replay"]}
+        default_case_id = (
+            DEFAULT_REPLAY_CASE_ID
+            if DEFAULT_REPLAY_CASE_ID in replay_ids
+            else next(
+                (item["id"] for item in cases if item["benchmark_replay"]),
+                None,
+            )
+        )
+        return {
+            "cases": cases,
+            "warnings": warnings,
+            "default_case_id": default_case_id,
+        }
 
     def _read_case(self, case_id: str) -> tuple[np.ndarray, np.ndarray | None, dict[str, Any]]:
         safe_id = Path(case_id).name
@@ -628,12 +656,11 @@ class DemoService:
                 raise ValueError("threshold artifact hash mismatch")
             payload = json.loads(threshold_path.read_text("utf-8"))
             if (
-                payload.get("schema_version") != 1
-                or payload.get("domain") != domain
+                payload.get("schema_version") != 2
                 or payload.get("confirmation_values_used") is not False
             ):
                 raise ValueError("threshold artifact scope mismatch")
-            records = payload["witnesses"]
+            records = payload["by_domain"][domain]["witnesses"]
         except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
             raise ApiError("Held-out replay threshold provenance is unavailable.") from exc
         witnesses = []
@@ -752,10 +779,16 @@ class DemoService:
             center=float(replay.center[index]), scale=float(replay.scale[index])
         )
         witnesses, controller, threshold_source = self._benchmark_witnesses(
-            "sensor", normalization
+            str(replay.metadata["domain_key"]).lower(), normalization
         )
-        observed_scores = np.asarray(witnesses[0].scorer(observation), dtype=np.float32)
-        model_scores = np.asarray(witnesses[0].scorer(model_output), dtype=np.float32)
+        display_witness_id = str(replay.metadata.get("display_witness", "A_causal_mlp"))
+        display_witness = next(
+            (item for item in witnesses if item.witness_id == display_witness_id), None
+        )
+        if display_witness is None:
+            raise ApiError(f"Unknown display witness in replay metadata: {display_witness_id}")
+        observed_scores = np.asarray(display_witness.scorer(observation), dtype=np.float32)
+        model_scores = np.asarray(display_witness.scorer(model_output), dtype=np.float32)
         verification = controller.verify(observation, model_output)
 
         scale = float(replay.scale[index])
@@ -778,7 +811,7 @@ class DemoService:
             "anomaly_os_nrmse": os_nrmse(reference, observation, scale, labels),
         }
 
-        threshold = float(witnesses[0].threshold)
+        threshold = float(display_witness.threshold)
         concern, cues = self._benchmark_evidence_payload(
             observation,
             model_output,
@@ -802,6 +835,7 @@ class DemoService:
             "observed_scores": observed_scores,
             "normalization": normalization,
             "witnesses": witnesses,
+            "display_witness": display_witness,
             "controller": controller,
             "threshold_source": threshold_source,
         }
@@ -843,6 +877,10 @@ class DemoService:
                 "reference_available": True,
                 "reference_scope": replay.metadata["reference_scope"],
                 "method_scope": replay.metadata["method_scope"],
+                "display_witness": display_witness.witness_id,
+                "display_witness_label": (
+                    "Scorer A" if display_witness.witness_id == "A_causal_mlp" else "Scorer B"
+                ),
                 "target_event": [
                     replay.metadata["target_event_start"],
                     replay.metadata["target_event_end"],
@@ -883,6 +921,7 @@ class DemoService:
     ) -> dict[str, Any]:
         replay = data["replay"]
         session = data["model_session"]
+        domain_label = str(replay.metadata["domain"])
         return {
             "mode": "heldout_benchmark_replay",
             "certification_eligible": True,
@@ -892,11 +931,12 @@ class DemoService:
             "certificate": verification.to_dict(include_scores=False),
             "repair_intervals": [],
             "eligibility_reason": (
-                "Frozen Sensor-domain A/B thresholds are available for this held-out replay."
+                f"Frozen {domain_label}-domain A/B thresholds are available for this "
+                "held-out replay."
             ),
             "runtime_provenance": {
                 "threshold_scope": {
-                    "calibration_domain": "Sensor calibration groups",
+                    "calibration_domain": f"{domain_label} calibration groups",
                     "window_length": 512,
                     "configured_witnesses": ["A_causal_mlp", "B_causal_conv"],
                     "threshold_source": data["threshold_source"],
@@ -1033,7 +1073,8 @@ class DemoService:
             raise ApiError(str(exc)) from exc
         current = session.current
         witnesses = data["witnesses"]
-        scores = np.asarray(witnesses[0].scorer(current), dtype=np.float32)
+        display_witness = data["display_witness"]
+        scores = np.asarray(display_witness.scorer(current), dtype=np.float32)
         verification = data["controller"].verify(data["observed"], current)
         current_is_automatic = bool(np.array_equal(current, session.baseline))
         replay = data["replay"]
@@ -1057,7 +1098,7 @@ class DemoService:
             current,
             data["observed_scores"],
             scores,
-            threshold=float(witnesses[0].threshold),
+            threshold=float(display_witness.threshold),
             scale=float(replay.scale[index]),
         )
         return _jsonable(

@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this research demonstration, cite this software release and the datasets used in your evaluation."
 title: "DenoiseAPT"
 type: software
-version: 0.2.1
-date-released: 2026-08-13
+version: 0.2.2
+date-released: 2026-08-20
 repository-code: "https://github.com/alireza-mq/DenoiseAPT"
 url: "https://github.com/alireza-mq/DenoiseAPT"
 authors:

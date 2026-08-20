@@ -578,7 +578,7 @@ def _download_file(
 ) -> None:
     request = Request(
         url,
-        headers={"User-Agent": "DenoiseAPT-Demo/0.2.1 (+research artifact)"},
+        headers={"User-Agent": "DenoiseAPT-Demo/0.2.2 (+research artifact)"},
     )
     context = None
     if allow_insecure:

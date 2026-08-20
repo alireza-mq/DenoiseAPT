@@ -9,6 +9,8 @@ are retained separately by the authors.
 - MIT-licensed DenoiseAPT application code and browser assets.
 - Frozen live-runtime checkpoints and configuration.
 - A deterministic synthetic fixture used only by API and installation tests.
+- Two integrity-pinned demonstration replays: CATSv2 rich dynamics and MIT-BIH
+  ECG anomaly preservation, under their separate upstream-data notices.
 - Aggregate external-benchmark provenance and summary.
 - Self-contained tests, setup scripts, and software documentation.
 
@@ -20,20 +22,19 @@ redistributing an upstream dataset.
 
 - `.venv`, caches, logs, sessions, temporary files, and build products.
 - Internal run directories and sealed condition-level evidence.
-- Raw TSB-AD-U data, extracted upstream records, and derived evaluation windows.
-- The integrity-pinned CATSv2 simulated-telemetry replay used by the local
-  benchmark demonstration, pending review of upstream redistribution terms.
+- Raw TSB-AD-U data, extracted upstream records, and every derived evaluation
+  window except the two explicitly bundled demonstration replays.
 - Per-window outputs, waveform rows, witness rows, and audit traces.
 - The unlicensed RINS-T source checkout and unused third-party baselines.
 - Literature libraries, internal workflow state, superseded figures, and old
   release archives.
 
-The public checkout consequently has no benchmark preset. The browser directs
-users to compatible CSV inspection in review-only mode; it does not substitute
-the hidden synthetic test fixture. These exclusions prevent accidental
+The browser exposes only the two bundled benchmark presets and compatible CSV
+inspection in review-only mode; it does not substitute the hidden synthetic
+test fixture. These exclusions prevent accidental
 redistribution of upstream data, private research traces, unlicensed
 third-party source, and obsolete material. They do not imply that the retained
 research archive was deleted.
 
-The MIT License applies to the included DenoiseAPT code. Dataset and third-party
-terms remain with their respective upstream sources.
+The MIT License applies to the included DenoiseAPT code. The CATSv2 and MIT-BIH
+replays remain under the separate terms recorded in `LICENSES/`.

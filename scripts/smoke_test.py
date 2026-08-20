@@ -31,7 +31,8 @@ def main() -> None:
 
     health = request(f"{base}/api/health")
     assert health["status"] == "ok" and health["automatic_runtime_ready"]
-    cases = request(f"{base}/api/cases")["cases"]
+    catalog = request(f"{base}/api/cases")
+    cases = catalog["cases"]
     assert cases, "No prepared cases were exposed."
     if args.case:
         preferred = next((case for case in cases if case["id"] == args.case), None)
@@ -39,26 +40,101 @@ def main() -> None:
             available = ", ".join(case["id"] for case in cases)
             raise SystemExit(f"Unknown case {args.case!r}. Available cases: {available}")
     else:
+        default_case_id = catalog.get("default_case_id")
         preferred = next(
-            (
-                case
-                for case in cases
-                if not str(case.get("domain", "")).lower().startswith("synthetic")
+            (case for case in cases if case["id"] == default_case_id),
+            next(
+                (
+                    case
+                    for case in cases
+                    if not str(case.get("domain", "")).lower().startswith("synthetic")
+                ),
+                cases[0],
             ),
-            cases[0],
         )
+
+    corruption = (
+        {
+            "family": preferred["default_family"],
+            "severity": preferred["default_severity"],
+            "replicate": preferred["default_replicate"],
+        }
+        if preferred.get("benchmark_replay")
+        else {"family": "impulse", "severity": 0.35, "seed": 17}
+    )
 
     analysis = request(
         f"{base}/api/analyze",
         "POST",
         {
             "case_id": preferred["id"],
-            "corruption": {"family": "impulse", "severity": 0.35, "seed": 17},
+            "corruption": corruption,
             "window": {"start": 0, "length": min(512, preferred["length"])},
         },
     )
     n = len(analysis["series"]["observed"])
     assert n >= 64
+    if preferred.get("benchmark_replay"):
+        assert set(analysis["series"]) == {
+            "reference",
+            "observed",
+            "median",
+            "wavelet",
+            "noisereduce",
+            "rins_t",
+            "our_model",
+        }
+        assert analysis["automatic_control"]["mode"] == "heldout_benchmark_replay"
+        assert analysis["automatic_control"]["certificate"]["passed"] is True
+        start, end = analysis["meta"]["suggested_expert_interval"]
+        intervention = request(
+            f"{base}/api/intervene",
+            "POST",
+            {
+                "session_id": analysis["session_id"],
+                "action": "blend",
+                "start": start,
+                "end": end,
+                "beta": 0.75,
+                "expected_revision": analysis["revision"],
+            },
+        )
+        assert len(intervention["series"]["our_model"]) == n
+        assert intervention["history_depth"] == 1
+        restored = request(
+            f"{base}/api/intervene",
+            "POST",
+            {
+                "session_id": analysis["session_id"],
+                "action": "restore_automatic",
+                "expected_revision": intervention["revision"],
+            },
+        )
+        assert restored["series"]["our_model"] == analysis["series"]["our_model"]
+        revert = request(
+            f"{base}/api/intervene",
+            "POST",
+            {
+                "session_id": analysis["session_id"],
+                "action": "revert",
+                "expected_revision": restored["revision"],
+            },
+        )
+        assert revert["series"]["our_model"] == intervention["series"]["our_model"]
+        print(
+            json.dumps(
+                {
+                    "status": "PASS",
+                    "case": preferred["name"],
+                    "time_points": n,
+                    "session": analysis["session_id"],
+                    "controller_mode": analysis["automatic_control"]["mode"],
+                    "intervention": "blend, restore automatic, then revert",
+                },
+                indent=2,
+            )
+        )
+        return
     for key in (
         "classical",
         "cgan",

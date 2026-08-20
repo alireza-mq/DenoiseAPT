@@ -1,10 +1,10 @@
 {
   "artifact": "data/prepared/tsb_ad_cats_heldout_replay.npz",
-  "artifact_sha256": "15e12e6624405d0c4f825401cf0b3c1ba2e93a6b651a16bf13f66461a6fc459c",
+  "artifact_sha256": "d34588f0502dbf5e0a466bec810f5c104e9a6a4d59370e6e176ff916470fcbb7",
   "default_condition_id": "d69f582b1ae19ea2e118523ab3029dab3741ce95f23898890ea90baefa81425a",
-  "redistribution_note": "This derived replay is for a local benchmark demonstration and is excluded from the public source release pending upstream dataset-term review.",
+  "redistribution_note": "This replay contains third-party-derived data governed by LICENSES/CATS-DATA-NOTICE.md. It is not covered by the project MIT license.",
   "schema_version": 1,
-  "selection_note": "Illustrative held-out condition selected after the panel was examined; aggregate claims remain those in the sealed benchmark artifacts.",
+  "selection_note": "Illustrative held-out condition selected after panel inspection for a rich automatic-to-expert workflow; aggregate claims remain those in the sealed benchmark.",
   "source_artifacts": {
     "runs/external_denoiser_benchmark_v1/artifacts/benchmark_outputs.npz": "d599f15d6162213d570c5e917030adb59c65fa54a59e56a1738d15a98a2bf938",
     "runs/hybrid_v2_confirmation_fresh_v1/units/seed_17/sensor/audit_trace.npz": "d468d14deed29bcf7eec6febeccca6f8fdfd4b377974d06241643c6116f2b68f"

@@ -109,6 +109,7 @@ def load_benchmark_replay(path: Path) -> BenchmarkReplayCase:
     with np.load(path, allow_pickle=False) as item:
         required = {
             "metadata_json",
+            "signal",
             "reference",
             "labels",
             "condition_id",
@@ -124,11 +125,21 @@ def load_benchmark_replay(path: Path) -> BenchmarkReplayCase:
         if missing:
             raise ValueError(f"Replay artifact is missing arrays: {sorted(missing)}")
         metadata = json.loads(str(item["metadata_json"].item()))
-        if not isinstance(metadata, dict) or metadata.get("schema_version") != 1:
+        if (
+            not isinstance(metadata, dict)
+            or metadata.get("schema_version") != 1
+            or metadata.get("case_id") != path.stem
+            or metadata.get("benchmark_replay") is not True
+            or metadata.get("held_out") is not True
+            or manifest.get("default_condition_id") != metadata.get("default_condition_id")
+        ):
             raise ValueError("Replay metadata must use schema version 1")
         reference = np.asarray(item["reference"], dtype=np.float32).reshape(-1)
         if reference.size != 512 or not np.isfinite(reference).all():
             raise ValueError("Replay reference must be one finite 512-point window")
+        signal = np.asarray(item["signal"], dtype=np.float32).reshape(-1)
+        if not np.array_equal(signal, reference):
+            raise ValueError("Replay catalog signal must equal the evaluation reference")
         labels = np.asarray(item["labels"], dtype=bool).reshape(-1)
         if labels.size != reference.size:
             raise ValueError("Replay labels must align with the reference")
@@ -146,6 +157,17 @@ def load_benchmark_replay(path: Path) -> BenchmarkReplayCase:
             raise ValueError("Replay identity/normalization arrays are invalid")
         if np.any(scale <= 0):
             raise ValueError("Replay scales must be positive")
+        for start_key, end_key in (
+            ("target_event_start", "target_event_end"),
+            ("expert_interval_start", "expert_interval_end"),
+        ):
+            try:
+                start = int(metadata[start_key])
+                end = int(metadata[end_key])
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("Replay metadata intervals are invalid") from exc
+            if not 0 <= start < end <= reference.size:
+                raise ValueError("Replay metadata intervals must lie inside the window")
         series: dict[str, NDArray[np.float32]] = {}
         for key in SERIES_KEYS:
             values = np.asarray(item[key], dtype=np.float32)
