@@ -234,7 +234,13 @@
   function updateCaseMeta() {
     const item = state.cases.find(c => String(c.id) === dom.caseSelect.value);
     if (!item) return;
-    const role = item.demo_role === "main_workflow" ? "main workflow" : item.demo_role === "anomaly_preservation" ? "anomaly-preservation spotlight" : null;
+    const role = item.demo_role === "main_workflow"
+      ? "main workflow"
+      : item.demo_role === "anomaly_spotlight"
+        ? "anomaly-preservation spotlight"
+        : item.demo_role === "ecg_optional"
+          ? "optional ECG case"
+          : null;
     const details = [item.domain, role, item.held_out ? "held-out source group" : null, finite(item.length) ? `[0, ${formatInteger(item.length)})` : null,
       finite(item.sample_rate) ? `${formatNumber(item.sample_rate)} Hz` : null,
       finite(item.anomaly_count) ? `${item.anomaly_count} labelled event${item.anomaly_count === 1 ? "" : "s"}` : null].filter(Boolean);
@@ -266,7 +272,7 @@
     dom.exportButton.disabled = true;
     const title = $("h3", dom.empty), copy = $("p", dom.empty);
     if (title) title.textContent = "New case selected";
-    if (copy) copy.textContent = "Run comparison to load the selected held-out replay.";
+    if (copy) copy.textContent = "Run comparison to load the selected case.";
     updateActions();
   }
 

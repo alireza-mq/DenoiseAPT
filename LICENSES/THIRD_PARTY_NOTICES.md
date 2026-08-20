@@ -11,6 +11,9 @@ attribution and ODC Attribution 1.0 terms are recorded in
 [`MITDB-DATA-NOTICE.md`](MITDB-DATA-NOTICE.md). Neither replay is covered by
 the project MIT license. All other TSB-AD-U records remain excluded.
 
+The optional MSL anomaly-preservation artifact is not redistributed because its
+upstream data grant is not explicit. Only its integrity manifest is included.
+
 `denoiseapt/publication_metrics.py` contains a minimal NumPy port of the VUS-PR
 algorithm from TSB-AD 1.5, commit
 `e0975a5f7d3e65ab77e9fab24d1b5b51acda8f48`. The relevant upstream files are

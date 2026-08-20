@@ -1,0 +1,12 @@
+{
+  "artifact": "data/prepared/tsb_ad_msl_heldout_replay.npz",
+  "artifact_sha256": "967e090c3f5384ab30a11d248caef9dce6f7c6a10b0fa801e1babb6a24982db2",
+  "default_condition_id": "471c7dd1586f4bd7fd18eaa646dd1ed1a858a80aca6567d214983339a81ca8ec",
+  "redistribution_note": "This replay is intentionally omitted from the public repository pending explicit upstream data redistribution permission. The manifest is retained for integrity checking when the artifact is installed locally.",
+  "schema_version": 1,
+  "selection_note": "Illustrative held-out condition selected after panel inspection to show a narrow event retained by DenoiseAPT but removed or attenuated by smoothing-oriented comparators; aggregate claims remain those in the sealed benchmark.",
+  "source_artifacts": {
+    "runs/external_denoiser_benchmark_v1/artifacts/benchmark_outputs.npz": "d599f15d6162213d570c5e917030adb59c65fa54a59e56a1738d15a98a2bf938",
+    "runs/hybrid_v2_confirmation_fresh_v1/units/seed_17/sensor/audit_trace.npz": "d468d14deed29bcf7eec6febeccca6f8fdfd4b377974d06241643c6116f2b68f"
+  }
+}

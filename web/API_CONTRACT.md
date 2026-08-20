@@ -15,12 +15,14 @@ numbers. All intervals are zero-based and half-open: `[start, end)`.
 
 The revised browser recognizes two modes:
 
-- two bundled, integrity-pinned held-out benchmark replays; and
+- two bundled, integrity-pinned benchmark replays, plus support for an optional
+  integrity-matched local MSL replay; and
 - local CSV inspection in explicit review-only mode.
 
-The main replay is a derived CATSv2 simulated-telemetry window. The second is a
-derived MIT-BIH ECG window selected to highlight anomaly preservation. Both are
-bundled under separate upstream-data terms recorded in `LICENSES/`; neither is
+The main replay is a derived CATSv2 simulated telemetry window. A local MSL
+artifact, when installed, is ordered second as the anomaly-preservation
+spotlight. The bundled MIT-BIH ECG window is ordered third. The bundled data
+use separate upstream terms recorded in `LICENSES/`; neither artifact is
 covered by the project MIT license.
 
 The deterministic synthetic fixture retained in the public package is for API,
@@ -76,7 +78,7 @@ whose `benchmark_replay` field is `true`.
   "cases": [
     {
       "id": "tsb_ad_cats_heldout_replay",
-      "name": "TSB-AD-U · CATS rich dynamics · held-out replay",
+      "name": "CATS rich dynamics",
       "domain": "Sensor",
       "length": 512,
       "benchmark_replay": true,

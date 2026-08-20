@@ -1,19 +1,22 @@
 # Demo data
 
-The revised application separates two bundled benchmark replays from local CSV
-inspection. A deterministic synthetic fixture is retained only for automated
+The revised application separates benchmark replays from local CSV inspection.
+A deterministic synthetic fixture is retained only for automated
 tests and is not a user-facing data source.
 
-## Bundled held-out replays
+## Demonstration replays
 
-The main workflow uses a 512-time-point held-out window from CATSv2, a simulated
-complex dynamical-system telemetry dataset included in TSB-AD-U. The anomaly
-preservation spotlight uses a 512-time-point ECG window derived from the
-MIT-BIH Arrhythmia Database. Each replay contains a derived source window, its
+The main workflow uses a 512-time-point CATSv2 simulated telemetry window. A
+local MSL Sensor replay provides the sparse anomaly-preservation spotlight used
+in the recording. The bundled MIT-BIH Arrhythmia Database ECG window is the
+optional third case. Each replay contains a derived source window, its
 evaluation-only reference and labels, and frozen matched denoiser outputs for a
 controlled corruption condition.
 
-Both windows were selected after panel inspection for visual explanation and
+The MSL manifest is published for integrity and provenance, but the exact MSL
+data artifact is excluded until its upstream redistribution terms are explicit.
+
+These windows were selected after panel inspection for visual explanation and
 must not be treated as additional aggregate benchmark evidence. Each artifact
 is accepted only with its integrity manifest and pinned provenance hashes; a
 missing or mismatched manifest fails closed.

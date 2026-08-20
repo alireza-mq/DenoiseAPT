@@ -16,8 +16,10 @@ benchmark. Repository: <https://github.com/alireza-mq/DenoiseAPT>.
 - `data/prepared/synthetic_guided_case.npz`: deterministic fixture retained
   only for API and installation tests; the revised browser hides it from the
   benchmark selector.
-- `data/prepared/*_heldout_replay.npz`: two small, integrity-pinned
-  demonstration replays governed by the separate notices in `LICENSES/`.
+- `data/prepared/*_replay.npz`: two small, integrity-pinned bundled replays
+  governed by the separate notices in `LICENSES/`.
+- `data/prepared/tsb_ad_msl_heldout_replay_manifest.json`: integrity metadata
+  for the optional local MSL spotlight; its data artifact is not redistributed.
 - `reproducibility/`: frozen configuration, receipts, code, and aggregate
   summary for the external-denoiser benchmark.
 - `tests/`: self-contained application and metric tests.
@@ -49,23 +51,28 @@ chmod +x setup.sh run_demo.sh
 Open <http://127.0.0.1:8765>. The service is intended for local use and has no
 authentication layer, so do not bind it to a public network.
 
-The browser opens with the CATSv2 rich-dynamics replay. A second MIT-BIH ECG
-replay highlights anomaly preservation. The packaged synthetic fixture remains
-available to automated tests but is not shown as a demonstration case.
+The browser opens with `CATS rich dynamics`. When the integrity-matched local
+artifact is installed, `MSL anomaly preservation` appears second as the sparse
+spotlight used in the five-minute recording. `MITDB ECG` remains available as
+the bundled optional case. The packaged synthetic fixture remains available to
+automated tests but is not shown as a demonstration case.
 
 ## Bundled held-out benchmark replays
 
-The main workflow uses an integrity-pinned, 512-time-point replay from a
-held-out TSB-AD-U CATSv2 simulated-telemetry window. The second replay comes
-from a held-out MIT-BIH Arrhythmia Database ECG window and was selected to make
-the preservation tradeoff visible. Each stores one derived evaluation window
-and frozen, matched outputs for the same controlled corruption condition.
-Both examples were selected after the benchmark panel was examined; they are
-illustrative and do not replace the aggregate benchmark.
+The main workflow uses an integrity-pinned, 512-time-point CATSv2 simulated
+telemetry window. The local MSL spotlight is almost flat except for one narrow
+event: Median Filter and RINS-T remove it, NoiseReduce attenuates it, Wavelet
+retains it with the injected impulses, and Our Model retains it while achieving
+the lowest displayed error. The bundled MIT-BIH ECG replay is the optional
+third case. Each stores one derived evaluation window and frozen, matched
+outputs for the same controlled corruption condition. The examples were
+selected after the benchmark panel was examined; they are illustrative and do
+not replace the aggregate benchmark.
 
-The replays are bundled with integrity manifests and separate upstream-data
+The bundled replays have integrity manifests and separate upstream-data
 notices; the service fails closed if an artifact or provenance hash does not
-match. They are not covered by the project MIT license. See
+match. The MSL artifact stays local until its upstream data redistribution
+terms are explicit. Replay data are not covered by the project MIT license. See
 [`data/README.md`](data/README.md) and
 [`docs/DATA_CARD.md`](docs/DATA_CARD.md).
 
@@ -121,9 +128,9 @@ use a second terminal:
 .\.venv\Scripts\python.exe scripts\smoke_test.py
 ```
 
-These self-contained checks cover the hidden deterministic fixture and the two
-integrity-pinned demonstration replays. They do not turn any selected window
-into aggregate benchmark evidence.
+These self-contained checks cover the hidden deterministic fixture, the two
+bundled replays, and the optional MSL manifest boundary. They do not turn any
+selected window into aggregate benchmark evidence.
 
 ## Reproducibility boundary
 

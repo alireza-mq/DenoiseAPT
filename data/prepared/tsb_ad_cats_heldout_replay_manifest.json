@@ -1,6 +1,6 @@
 {
   "artifact": "data/prepared/tsb_ad_cats_heldout_replay.npz",
-  "artifact_sha256": "d34588f0502dbf5e0a466bec810f5c104e9a6a4d59370e6e176ff916470fcbb7",
+  "artifact_sha256": "1dcb5d08d03bae4314061b851a7a40011723cf270360f008f9a7a5973c8f2f54",
   "default_condition_id": "d69f582b1ae19ea2e118523ab3029dab3741ce95f23898890ea90baefa81425a",
   "redistribution_note": "This replay contains third-party-derived data governed by LICENSES/CATS-DATA-NOTICE.md. It is not covered by the project MIT license.",
   "schema_version": 1,

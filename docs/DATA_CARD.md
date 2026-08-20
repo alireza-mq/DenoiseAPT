@@ -4,7 +4,7 @@
 
 DenoiseAPT exposes two user-facing paths with different scientific scopes:
 
-1. two integrity-pinned benchmark replays for the guided evaluation
+1. integrity-pinned benchmark replays for the guided evaluation
    demonstration; and
 2. compatible local CSV inspection in explicit review-only mode.
 
@@ -45,12 +45,21 @@ The replay is bundled with an integrity manifest and is governed by CC BY 4.0,
 as recorded in `LICENSES/CATS-DATA-NOTICE.md`. It is not covered by the project
 MIT license.
 
-## MIT-BIH ECG anomaly-preservation replay
+## MSL anomaly-preservation spotlight
 
-The second replay uses a fixed 512-time-point ECG window from the MIT-BIH
-Arrhythmia Database constituent of the held-out TSB-AD-U Medical confirmation
-panel. The clean reference and corrupted observation both contain configured
-Scorer A and B event opportunities near time index 232. Our Model retains both;
+The local recording setup installs a sparse 512-time-point MSL Sensor case with
+one narrow event. Median Filter and RINS-T remove that event, NoiseReduce
+attenuates it, Wavelet retains it together with the injected impulses, and Our
+Model retains it with the lowest displayed overall and event-region errors.
+Its manifest is public, but the exact data artifact is excluded pending
+explicit upstream redistribution permission.
+
+## MIT-BIH ECG optional replay
+
+The bundled optional replay uses a fixed 512-time-point ECG window from the
+MIT-BIH Arrhythmia Database constituent of the held-out TSB-AD-U Medical
+confirmation panel. The clean reference and corrupted observation both contain
+configured Scorer A and B event opportunities near time index 232. Our Model retains both;
 Median Filter and RINS-T lose both, Wavelet loses one, and Noisereduce retains
 both but has higher reconstruction error on this condition.
 
@@ -62,7 +71,7 @@ covered by the project MIT license.
 
 ## Frozen comparison outputs
 
-For either replay, the reference, corrupted observation, Median Filter,
+For each replay, the reference, corrupted observation, Median Filter,
 Wavelet Thresholding, Noisereduce, RINS-T Adaptation, and Our Model traces all
 belong to the same frozen condition. External comparators are not executed when
 the browser request is made. The reference and labels support evaluation views

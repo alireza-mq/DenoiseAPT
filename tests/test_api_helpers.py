@@ -71,8 +71,19 @@ def test_bundled_heldout_replays_are_ready_and_ordered():
         "tsb_ad_cats_heldout_replay",
         "tsb_ad_mitdb_anomaly_preservation_replay",
     ]
+    assert [
+        case["name"] for case in catalog["cases"] if case["benchmark_replay"]
+    ] == ["CATS rich dynamics", "MITDB ECG"]
     assert catalog["default_case_id"] == "tsb_ad_cats_heldout_replay"
     assert catalog["warnings"] == []
+
+
+def test_optional_msl_replay_is_manifested_but_not_redistributed():
+    manifest = ROOT / "data" / "prepared" / "tsb_ad_msl_heldout_replay_manifest.json"
+    artifact = ROOT / "data" / "prepared" / "tsb_ad_msl_heldout_replay.npz"
+    assert manifest.exists()
+    assert not artifact.exists()
+    assert "intentionally omitted" in manifest.read_text("utf-8")
 
 
 def test_csv_upload_remains_review_only_with_bundled_replays():

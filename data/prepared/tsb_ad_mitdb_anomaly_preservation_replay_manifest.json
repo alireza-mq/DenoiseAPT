@@ -1,6 +1,6 @@
 {
   "artifact": "data/prepared/tsb_ad_mitdb_anomaly_preservation_replay.npz",
-  "artifact_sha256": "90ba0899695e9cd1e19b0f15e1a746eae940af39ffb2e7434d60870f539a5ea6",
+  "artifact_sha256": "9f89215642595529d1195bd700776e84544d58f66f3da00b9864191be3d07b23",
   "default_condition_id": "6f1131a719dfcc116668cfc3a58d1258d648a3805d4272786aad845387587d04",
   "redistribution_note": "This replay contains third-party-derived data governed by LICENSES/MITDB-DATA-NOTICE.md. It is not covered by the project MIT license.",
   "schema_version": 1,

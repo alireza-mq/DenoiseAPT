@@ -9,8 +9,8 @@ are retained separately by the authors.
 - MIT-licensed DenoiseAPT application code and browser assets.
 - Frozen live-runtime checkpoints and configuration.
 - A deterministic synthetic fixture used only by API and installation tests.
-- Two integrity-pinned demonstration replays: CATSv2 rich dynamics and MIT-BIH
-  ECG anomaly preservation, under their separate upstream-data notices.
+- Two bundled integrity-pinned demonstration replays: CATSv2 rich dynamics and
+  MIT-BIH ECG, plus the manifest for the optional local MSL spotlight.
 - Aggregate external-benchmark provenance and summary.
 - Self-contained tests, setup scripts, and software documentation.
 
@@ -23,13 +23,14 @@ redistributing an upstream dataset.
 - `.venv`, caches, logs, sessions, temporary files, and build products.
 - Internal run directories and sealed condition-level evidence.
 - Raw TSB-AD-U data, extracted upstream records, and every derived evaluation
-  window except the two explicitly bundled demonstration replays.
+  window except the two explicitly bundled demonstration replays. The exact
+  MSL replay remains local pending explicit upstream redistribution permission.
 - Per-window outputs, waveform rows, witness rows, and audit traces.
 - The unlicensed RINS-T source checkout and unused third-party baselines.
 - Literature libraries, internal workflow state, superseded figures, and old
   release archives.
 
-The browser exposes only the two bundled benchmark presets and compatible CSV
+The public browser exposes the two bundled benchmark presets and compatible CSV
 inspection in review-only mode; it does not substitute the hidden synthetic
 test fixture. These exclusions prevent accidental
 redistribution of upstream data, private research traces, unlicensed

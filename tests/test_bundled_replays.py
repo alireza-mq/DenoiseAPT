@@ -51,6 +51,16 @@ def test_bundled_artifacts_match_manifests_and_scope():
         assert replay.metadata["expert_interval_end"] == end
 
 
+def test_bundled_case_names_are_short_and_unambiguous():
+    catalog = DemoService(ROOT).list_cases()
+    names = [item["name"] for item in catalog["cases"] if item["benchmark_replay"]]
+    assert names == ["CATS rich dynamics", "MITDB ECG"]
+    assert all(
+        "TSB-AD-U" not in name and "held-out replay" not in name
+        for name in names
+    )
+
+
 def test_cats_main_workflow_metrics_and_reversible_edit():
     service = DemoService(ROOT)
     result = service.analyze(_request("tsb_ad_cats_heldout_replay"))
