@@ -9,6 +9,18 @@ This public repository contains the MIT-licensed application, frozen runtime
 artifacts, tests, and aggregate provenance for the retrospective denoiser
 benchmark. Repository: <https://github.com/alireza-mq/DenoiseAPT>.
 
+## Demo video
+
+**[Watch or download the DenoiseAPT ICDM 2026 demonstration](https://github.com/alireza-mq/DenoiseAPT/releases/tag/icdm-2026-demo-video-v1).**
+
+The video presents matched denoiser comparison, configured anomaly
+preservation evidence, expert guided interval adaptation, and the sparse
+anomaly preservation spotlight. Synchronized English captions are included
+with the release.
+
+[MP4 video](https://github.com/alireza-mq/DenoiseAPT/releases/download/icdm-2026-demo-video-v1/DenoiseAPT_ICDM_2026_Demo_Video.mp4) ·
+[Captions (SRT)](https://github.com/alireza-mq/DenoiseAPT/releases/download/icdm-2026-demo-video-v1/DenoiseAPT_ICDM_2026_Demo_Captions.srt)
+
 ## Public repository contents
 
 - `denoiseapt/`, `server.py`, and `web/`: local application and browser UI.
