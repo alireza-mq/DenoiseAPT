@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="190" viewBox="0 0 1080 190" role="img" aria-labelledby="title desc">
+  <title id="title">Watch the DenoiseAPT demo online</title>
+  <desc id="desc">Click here to open the DenoiseAPT ICDM 2026 demonstration video player.</desc>
+  <rect x="3" y="3" width="1074" height="184" rx="18" fill="#0F7A7A" stroke="#0B6262" stroke-width="6"/>
+  <circle cx="91" cy="95" r="43" fill="#FFFFFF"/>
+  <path d="M80 70 L80 120 L116 95 Z" fill="#0F7A7A"/>
+  <text x="158" y="83" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700">Watch the DenoiseAPT demo online</text>
+  <text x="158" y="126" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="500">Click here to open the video player</text>
+  <path d="M1005 77 L1023 95 L1005 113" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
