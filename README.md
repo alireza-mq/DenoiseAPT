@@ -11,7 +11,7 @@ benchmark. Repository: <https://github.com/alireza-mq/DenoiseAPT>.
 
 ## Demo video
 
-**[Watch or download the DenoiseAPT ICDM 2026 demonstration](https://github.com/alireza-mq/DenoiseAPT/releases/tag/icdm-2026-demo-video-v1).**
+**[▶ Watch the DenoiseAPT ICDM 2026 demonstration online](https://alireza-mq.github.io/DenoiseAPT/)**
 
 The revised video presents matched denoiser comparison, configured anomaly
 preservation evidence, expert guided interval adaptation, and the sparse
