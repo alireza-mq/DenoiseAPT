@@ -1,0 +1,83 @@
+name: Deploy demo video player
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "video-page/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Pages artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Assemble player and verified release video
+        shell: bash
+        env:
+          VIDEO_URL: https://github.com/alireza-mq/DenoiseAPT/releases/download/icdm-2026-demo-video-v1/DenoiseAPT_ICDM_2026_Demo_Video.mp4
+          VIDEO_SHA256: 3834E1AD239F0489EA0F43982D8E406095F03C7E617D4E0595C0D0A61A144DE7
+          VIDEO_PATH: _site/DenoiseAPT_ICDM_2026_Demo_Video.mp4
+        run: |
+          set -euo pipefail
+
+          install -d -- _site
+          cp -R -- video-page/. _site/
+
+          curl \
+            --fail \
+            --location \
+            --proto '=https' \
+            --tlsv1.2 \
+            --retry 4 \
+            --retry-all-errors \
+            --connect-timeout 20 \
+            --max-time 600 \
+            --silent \
+            --show-error \
+            --output "$VIDEO_PATH" \
+            "$VIDEO_URL"
+
+          printf '%s  %s\n' "${VIDEO_SHA256,,}" "$VIDEO_PATH" \
+            | sha256sum --check --strict
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

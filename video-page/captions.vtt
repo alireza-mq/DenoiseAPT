@@ -1,0 +1,247 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:08.573
+In this video, I will demonstrate DenoiseAPT, an evidence-aware and
+interactive system for time-series denoising.
+
+2
+00:00:09.073 --> 00:00:12.451
+The interface connects automatic inference,
+
+3
+00:00:12.451 --> 00:00:20.331
+configured anomaly evidence, reversible expert adaptation, and
+provenance export in one local workflow.
+
+4
+00:00:20.331 --> 00:00:30.290
+I will first use a rich CATS signal to show the complete process, and
+then switch to a sparse MSL signal to highlight anomaly preservation.
+
+5
+00:00:32.189 --> 00:00:35.007
+The interface has three stages.
+
+6
+00:00:35.707 --> 00:00:39.742
+First, the user selects a
+supported evaluation window.
+
+7
+00:00:39.742 --> 00:00:45.922
+Second, the system compares denoising outputs and presents
+preservation evidence.
+
+8
+00:00:45.922 --> 00:00:49.613
+Third, the user can apply reversible expert input.
+
+9
+00:00:49.613 --> 00:00:52.704
+Start and End define the fixed time window.
+
+10
+00:00:52.704 --> 00:01:00.086
+The corruption controls reproduce a known evaluation condition and
+are not part of normal inference.
+
+11
+00:01:00.586 --> 00:01:03.762
+CSV upload is available only in review mode.
+
+12
+00:01:04.262 --> 00:01:07.438
+I begin with CATS rich dynamics, using Start
+
+13
+00:01:07.438 --> 00:01:14.477
+zero, End five hundred twelve, Gaussian corruption at zero point
+seven five, and replicate zero.
+
+14
+00:01:14.677 --> 00:01:17.666
+I then run the matched comparison.
+
+15
+00:01:19.566 --> 00:01:25.513
+Every panel uses the same reference before corruption and the same
+corrupted observation.
+
+16
+00:01:25.513 --> 00:01:28.680
+The reference is available only for evaluation.
+
+17
+00:01:28.680 --> 00:01:35.940
+Median filtering, wavelet thresholding, Noisereduce, and the RINS-T
+adaptation are frozen matched outputs.
+
+18
+00:01:36.440 --> 00:01:43.391
+Our Model follows the repeated rises, troughs,
+and major transition while reducing the added corruption.
+
+19
+00:01:43.391 --> 00:01:50.806
+For this condition, it has the lowest displayed error over both the
+complete window and the labelled event region.
+
+20
+00:01:51.306 --> 00:01:54.009
+This case illustrates the demonstration
+
+21
+00:01:54.009 --> 00:02:00.110
+workflow, while the paper's aggregate conclusions come from the
+complete evaluation panel.
+
+22
+00:02:01.710 --> 00:02:07.380
+I now select time points three hundred sixty-one through three
+hundred seventy-five.
+
+23
+00:02:07.880 --> 00:02:13.937
+The evidence view compares the corrupted
+observation with Our Model over the same interval.
+
+24
+00:02:13.937 --> 00:02:18.442
+The teal band marks shared support under configured Scorer A. This is
+
+25
+00:02:18.442 --> 00:02:23.568
+an inspection cue, not an anomaly probability or a
+claim about physical truth.
+
+26
+00:02:24.068 --> 00:02:30.203
+The automatic output also passes the
+complete-window checks from configured Scorers A and B.
+
+27
+00:02:30.203 --> 00:02:35.018
+The status card records the current state, check
+result, and provenance.
+
+28
+00:02:35.518 --> 00:02:42.741
+These evidence statements are intentionally
+limited to the frozen scorers and thresholds used by the system.
+
+29
+00:02:44.341 --> 00:02:53.930
+Next, I select time points three hundred seventy-nine through four
+hundred eleven, where expert context can affect the preferred result.
+
+30
+00:02:53.930 --> 00:02:58.273
+Observation weight beta changes only this selected interval.
+
+31
+00:02:58.273 --> 00:03:04.584
+A value of zero keeps the automatic model output, while a value of
+one keeps the observation.
+
+32
+00:03:05.084 --> 00:03:10.247
+I move between both endpoints so the preview
+clearly shows the difference.
+
+33
+00:03:10.247 --> 00:03:14.427
+I then choose zero point seven five and apply the adaptation.
+
+34
+00:03:14.927 --> 00:03:20.254
+The model parameters remain frozen, and only the
+selected interval changes.
+
+35
+00:03:20.254 --> 00:03:25.581
+The service recomputes the evidence and performs a
+fresh full-window check.
+
+36
+00:03:26.081 --> 00:03:32.637
+The adapted result still passes, and both
+displayed errors improve in this illustrative edit.
+
+37
+00:03:33.137 --> 00:03:36.416
+Revert removes the latest action, Restore Auto
+
+38
+00:03:36.416 --> 00:03:45.594
+returns to the original model output, and Export Result records the
+signals, settings, actions, checks, measures, and provenance.
+
+39
+00:03:47.294 --> 00:03:54.460
+For a clearer preservation contrast, I switch to MSL anomaly
+preservation and run its fixed impulse condition.
+
+40
+00:03:54.460 --> 00:04:00.406
+This nearly flat sensor signal contains one important event at time
+point two hundred sixty.
+
+41
+00:04:00.906 --> 00:04:06.013
+At this event, the median filter removes the
+peak, and RINS-T nearly removes it.
+
+42
+00:04:06.013 --> 00:04:09.138
+Noisereduce retains only part of its amplitude.
+
+43
+00:04:09.638 --> 00:04:15.813
+Wavelet thresholding also preserves the peak,
+but leaves the surrounding impulse corruption.
+
+44
+00:04:16.313 --> 00:04:19.286
+Our Model preserves almost the complete event
+
+45
+00:04:19.286 --> 00:04:28.052
+while suppressing the injected impulses, and it has the lowest
+displayed complete-window and event-region errors for this condition.
+
+46
+00:04:28.052 --> 00:04:34.836
+This shows the important balance between denoising and preserving
+short, meaningful signal structure.
+
+47
+00:04:36.436 --> 00:04:43.786
+Configured Scorers A and B both cross near time point two hundred
+sixty for the corrupted observation and Our Model.
+
+48
+00:04:44.286 --> 00:04:47.393
+The complete-window check passes, showing that
+
+49
+00:04:47.393 --> 00:04:54.364
+the preserved peak remains supported without adding a new detected
+interval under these configured checks.
+
+50
+00:04:54.864 --> 00:04:58.122
+Together, the two cases demonstrate synchronized
+
+51
+00:04:58.122 --> 00:05:02.062
+denoising comparison, inspectable preservation evidence,
+
+52
+00:05:02.062 --> 00:05:08.124
+expert-guided adaptation, reversible checking, and auditable export
+in one local workflow.
+
+53
+00:05:08.924 --> 00:05:10.439
+Thank you for watching.
